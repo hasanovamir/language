@@ -1,0 +1,28 @@
+"filename", "language", "C++", "Makefile", "comment", "blank", "total"
+"/home/amir_hs/Рабочий стол/proga/language/Makefile", "Makefile", 0, 2, 0, 0, 2
+"/home/amir_hs/Рабочий стол/proga/language/common_dump/common_dump.cpp", "C++", 145, 0, 9, 57, 211
+"/home/amir_hs/Рабочий стол/proga/language/common_dump/common_dump.h", "C++", 20, 0, 3, 6, 29
+"/home/amir_hs/Рабочий стол/proga/language/general_io_file_func/general_io_file_func.cpp", "C++", 15, 0, 2, 7, 24
+"/home/amir_hs/Рабочий стол/proga/language/general_io_file_func/general_io_file_func.h", "C++", 17, 0, 4, 8, 29
+"/home/amir_hs/Рабочий стол/proga/language/lang/calc_init.cpp", "C++", 56, 0, 5, 24, 85
+"/home/amir_hs/Рабочий стол/proga/language/lang/colors.h", "C++", 10, 0, 2, 4, 16
+"/home/amir_hs/Рабочий стол/proga/language/lang/lang.h", "C++", 60, 0, 5, 12, 77
+"/home/amir_hs/Рабочий стол/proga/language/lang/lang_types.h", "C++", 28, 0, 6, 12, 46
+"/home/amir_hs/Рабочий стол/proga/language/lang/lexica_lang.cpp", "C++", 273, 0, 12, 105, 390
+"/home/amir_hs/Рабочий стол/proga/language/lang/macros.h", "C++", 25, 0, 6, 12, 43
+"/home/amir_hs/Рабочий стол/proga/language/lang/main.cpp", "C++", 14, 0, 2, 10, 26
+"/home/amir_hs/Рабочий стол/proga/language/lang/musor.cpp", "C++", 107, 0, 12, 47, 166
+"/home/amir_hs/Рабочий стол/proga/language/lang/syntax_lang.cpp", "C++", 435, 0, 24, 198, 657
+"/home/amir_hs/Рабочий стол/proga/language/list/list.h", "C++", 59, 0, 7, 15, 81
+"/home/amir_hs/Рабочий стол/proga/language/list/list_dump.cpp", "C++", 140, 0, 9, 56, 205
+"/home/amir_hs/Рабочий стол/proga/language/list/list_init.cpp", "C++", 73, 0, 5, 34, 112
+"/home/amir_hs/Рабочий стол/proga/language/list/list_tools.cpp", "C++", 104, 0, 9, 53, 166
+"/home/amir_hs/Рабочий стол/proga/language/optimize.cpp", "C++", 233, 0, 8, 44, 285
+"/home/amir_hs/Рабочий стол/proga/language/stack/stack.cpp", "C++", 155, 0, 11, 63, 229
+"/home/amir_hs/Рабочий стол/proga/language/stack/stack.h", "C++", 70, 0, 11, 23, 104
+"/home/amir_hs/Рабочий стол/proga/language/tree/tree.h", "C++", 46, 0, 7, 14, 67
+"/home/amir_hs/Рабочий стол/proga/language/tree/tree_init_alloc.cpp", "C++", 144, 0, 12, 60, 216
+"/home/amir_hs/Рабочий стол/proga/language/tree/tree_insert.cpp", "C++", 35, 0, 4, 14, 53
+"/home/amir_hs/Рабочий стол/proga/language/tree/tree_io_to_file.cpp", "C++", 60, 0, 5, 25, 90
+"/home/amir_hs/Рабочий стол/proga/language/tree/tree_types.h", "C++", 95, 0, 14, 28, 137
+"Total", "-", 2419, 2, 194, 931, 3546
