@@ -2,6 +2,10 @@
 
 //--------------------------------------------------------------------------------
 
+static language_err_t CheckVarArr (variable_ctx* var_ctx);
+
+//--------------------------------------------------------------------------------
+
 tree_data_t
 MakeMathOperData (math_oper_t oper)
 {
@@ -50,60 +54,12 @@ MakeDigitData (double value)
 
 //--------------------------------------------------------------------------------
 
-tree_data_t
-MakeVarData (int oper_num)
-{
-    tree_data_t data;
-    
-    data.var_number = oper_num;
-    
-    return data;
-}
-
-//--------------------------------------------------------------------------------
-
-int 
-CheckForVariables (tree_node_t* node)
-{
-    if (node->node_data.var_number != 0) {
-        return 1;
-    }
-
-    if (node->left_node) {
-        if (CheckForVariables (node->left_node)) {
-            return 1;
-        }
-    }
-
-    if (node->right_node) {
-        if (CheckForVariables (node->right_node)) {
-            return 1;
-        }
-    }
-
-    return 0;
-}
-
-//--------------------------------------------------------------------------------
-
 int
-GetVarNumber (variable_ctx* variables_ctx, const char* name)
+AddVar (variable_ctx* var_ctx, variable_t var)
 {
-    for (int i = 0; i < variables_ctx->count; i++) {
-        if (strcmp (name, variables_ctx->variable_arr[i].name) == 0) {
-            return i;
-        }
-    }
-  
-    return -1;
-}
+    CheckVarArr (var_ctx);
 
-//--------------------------------------------------------------------------------
-
-int
-AddVar (variable_ctx* var_ctx, const char* name)
-{
-    strcpy (var_ctx->variable_arr[var_ctx->count].name, name);
+    var_ctx->variable_arr[var_ctx->count] = var;
 
     var_ctx->count++;
 
@@ -152,7 +108,7 @@ DebugPrint (const char* str ,int line)
 {
     char err_str[CommonStringSize] = "";
 
-    snprintf (err_str, CommonStringSize, "Ti Dolboeb. Syntax Error in line:%d ", line);
+    snprintf (err_str, CommonStringSize, "ERROR. Syntax Error in line:%d ", line);
 
     if (str != nullptr) {
         strcat (err_str, str);
@@ -161,6 +117,30 @@ DebugPrint (const char* str ,int line)
     strcat (err_str, "\n");
 
     RainbowPrint (err_str);
+}
+
+//--------------------------------------------------------------------------------
+
+static language_err_t
+CheckVarArr (variable_ctx* var_ctx)
+{
+    variable_t* var_arr = var_ctx->variable_arr;
+
+    int var_cap = var_ctx->capacity;
+
+    if (var_ctx->count == var_cap - 1) {
+        variable_t* tmp = (variable_t*) realloc (var_arr, var_cap * 2);
+
+        if (tmp == nullptr) {
+            PRINTERR (language_err_t::AlocationErr);
+            return language_err_t::AlocationErr;
+        }
+
+        var_ctx->variable_arr = tmp;
+        var_ctx->capacity = var_cap * 2;
+    }
+
+    return language_err_t::Success;
 }
 
 //--------------------------------------------------------------------------------

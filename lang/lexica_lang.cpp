@@ -192,11 +192,11 @@ GetVar (parser_ctx_t* parser_ctx)
     variable_t var = {};
 
     var.name   = const_cast <char*> (buffer) + pos - i;
-    var.number = i;
+    var.len = i;
 
     tree_data_t data = {};
 
-    data.var_ptr = var;
+    data.variable = var;
 
     tree_node_t* node = NewNode (node_type_t::Variable, data, nullptr, nullptr);
 
@@ -246,13 +246,13 @@ LexicalDump (token_t* tokens, int count)
                 break;
             case node_type_t::CustomFunc :
                 fprintf (dump, "custom func | data = %s)\n", 
-                    cur_node->node_data.var_ptr.name);
+                    cur_node->node_data.variable.name);
             case node_type_t::Constant :
                 fprintf (dump, "  Constant  | data = %lg)\n", cur_node->node_data.immediate);
                 break;
             case node_type_t::Variable :
                 fprintf (dump, "  variable  | data = \"%.*s\")\n", 
-                    cur_node->node_data.var_ptr.number, cur_node->node_data.var_ptr.name);
+                    cur_node->node_data.variable.len, cur_node->node_data.variable.name);
                 break;
             default:
                 break;

@@ -2,6 +2,10 @@
 
 //--------------------------------------------------------------------------------
 
+static language_err_t VarArrCtor  (variable_ctx** var_ctx);
+static void           VarArrDtor  (variable_ctx*  var_ctx);
+static bool           CheckForVar (variable_t var);
+
 static tree_node_t* GetP          (const token_t* tokens, int* pos, int node_num);
 static tree_node_t* GetMul        (const token_t* tokens, int* pos, int node_num);
 static tree_node_t* GetAdd        (const token_t* tokens, int* pos, int node_num);
@@ -16,6 +20,7 @@ static tree_node_t* GetFigBracket (const token_t* tokens, int* pos, int node_num
 static tree_node_t* GetIfWhile    (const token_t* tokens, int* pos, int node_num);
 static tree_node_t* GetElse       (const token_t* tokens, int* pos, int node_num);
 static tree_node_t* GetStatement  (const token_t* tokens, int* pos, int node_num);
+static tree_node_t* GetAnnounce   (const token_t* tokens, int* pos, int node_num);
 
 //--------------------------------------------------------------------------------
 
@@ -217,7 +222,6 @@ GetN (const token_t* tokens, int* pos, int node_num)
     tree_node_t* cur_node = tokens[*pos].node;
 
     if (cur_node->type != node_type_t::Constant) {
-        DebugPrint ("Idi nahui (GetN)", tokens[*pos - 1].line);
         return nullptr;
     }
 
@@ -248,6 +252,15 @@ GetV (const token_t* tokens, int* pos, int node_num)
     CHECK_POS;
 
     tree_node_t* cur_node  = tokens[*pos].node;
+
+    if (cur_node->type != node_type_t::Variable) {
+        return nullptr;
+    }
+
+    if (CheckForVar (cur_node->node_data.variable) == false) {
+        DebugPrint ("Unkown variable", tokens[*pos].line);
+        return nullptr;
+    }
 
     *pos += 1;
 
@@ -530,25 +543,22 @@ GetFigBracket (const token_t* tokens, int* pos, int node_num)
 
         MyFree (cur_node);
 
-        tree_node_t* node_1 = GetAss (tokens ,pos, node_num);
-        
-        if (node_1 == nullptr) {
-            DebugPrint ("nothing valid after open figure bracket", cur_line);
+        variable_ctx* v_ctx = nullptr;
+
+        if (VarArrCtor (&v_ctx) == language_err_t::AlocationErr) {
             return nullptr;
         }
 
-        cur_node = node_1;
+        stack_push (&stk, (void*) v_ctx);
 
-        tree_node_t* cur_ass = nullptr;
-
-        while (cur_ass = GetAss (tokens ,pos, node_num)) {
-            node_1->right_node = cur_ass;
-            
-            node_1 = cur_ass;
+        tree_node_t* node_1 = GetStatement (tokens ,pos, node_num);
+        
+        if (node_1 == nullptr) {
+            return nullptr;
         }
 
         if (*pos >= node_num) {
-            DebugPrint ("too few arguments to if-operator1", cur_line);
+            DebugPrint ("No close figure bracket", tokens[*pos].line);
             return nullptr;
         }
 
@@ -563,6 +573,12 @@ GetFigBracket (const token_t* tokens, int* pos, int node_num)
         *pos += 1;
 
         MyFree (node_2);
+
+        void* tmp = nullptr;
+
+        stack_pop (&stk, &tmp);
+
+        VarArrDtor ((variable_ctx*) tmp);
 
         return cur_node;
     }
@@ -616,7 +632,14 @@ GetStatement (const token_t* tokens, int* pos, int node_num)
     tree_node_t* cur_node = head;
 
     while (true) {
-        if ((cur_node->right_node = GetAss (tokens, pos, node_num))) {
+        if ((cur_node->right_node = GetAnnounce (tokens, pos, node_num))) {
+            cur_node = cur_node->right_node;
+        }
+        else if (*pos < node_num && tokens[*pos].node->type == node_type_t::Variable) {
+            cur_node->right_node = GetAss (tokens, pos, node_num);
+            if (cur_node->right_node == nullptr) {
+                return nullptr;
+            }
             cur_node = cur_node->right_node;
         }
         else if ((cur_node->right_node = GetIfWhile (tokens, pos, node_num))) {
@@ -652,22 +675,113 @@ GetAnnounce (const token_t* tokens, int* pos, int node_num)
         cur_node->node_data.keyword == keywords_t ::announce ) {
         *pos += 1;
 
+        if (*pos >= node_num || tokens[*pos].node->type != node_type_t::Variable) {
+            DebugPrint ("Too few arguments to announce", cur_line);
+            return nullptr;
+        }
+
         void* cur_vbl = nullptr;
 
         stack_pop (&stk, &cur_vbl);
 
         variable_ctx* cur_variables = (variable_ctx*) cur_vbl;
-
-        int len = tokens[*pos].node->node_data.var_ptr.number;
         
-        const char* name = tokens[*pos].node->node_data.var_ptr.name; 
+        AddVar (cur_variables, tokens[*pos].node->node_data.variable);
 
-        char str[len + 1] = "";
+        stack_push (&stk, cur_variables);
 
-        snprintf (str, len, "%s", name);
-        
-        AddVar (cur_variables, str);
+        cur_node->left_node = GetAss (tokens, pos, node_num);
+
+        tree_node_t* left = cur_node->left_node;
+
+        if (left->             type != node_type_t::Keyword || 
+            left->node_data.keyword != keywords_t ::semicolon) {
+            DebugPrint ("Initialization is required when declaring a variable", cur_line);
+            return nullptr;
+        }
+
+        return cur_node;
     }
+
+    return nullptr;
+}
+
+//--------------------------------------------------------------------------------
+
+static bool
+CheckForVar (variable_t var)
+{
+    int var_len = var.len;
+
+    void* v_arr = nullptr;
+
+    stack_pop (&stk, &v_arr);
+
+    if (v_arr == nullptr) {
+        return false;
+    }
+
+    variable_ctx* var_ctx = (variable_ctx*) v_arr;
+
+    for (int i = 0; i < var_ctx->count; i++) {
+        int         cur_len = var_ctx->variable_arr[i].len ;
+        const char* cur_var = var_ctx->variable_arr[i].name;
+
+        cur_len = (cur_len > var_len) ? var_len : cur_len;
+
+        if (strncmp (var.name, cur_var, cur_len) == 0) {
+            stack_push (&stk, v_arr);
+            return true;
+        }
+    }
+
+    if (CheckForVar (var)) {
+        stack_push (&stk, v_arr);
+        return true;
+    }
+
+    stack_push (&stk, v_arr);
+
+    return false;
+}
+
+//--------------------------------------------------------------------------------
+
+static language_err_t
+VarArrCtor (variable_ctx** var_ctx)
+{
+    *var_ctx = (variable_ctx*) calloc (1, sizeof (variable_ctx));
+
+    if (*var_ctx == nullptr) {
+        PRINTERR (language_err_t::AlocationErr);
+        return language_err_t::AlocationErr;
+    }
+
+    variable_t* var_arr = (variable_t*) calloc (CommonStackSize, sizeof (variable_t));
+
+    if (var_arr == nullptr) {
+        PRINTERR (language_err_t::AlocationErr);
+        return language_err_t::AlocationErr;
+    }
+
+    (*var_ctx)->capacity = CommonStackSize;
+
+    (*var_ctx)->variable_arr = var_arr;
+
+    return language_err_t::Success;
+}
+
+//--------------------------------------------------------------------------------
+
+static void
+VarArrDtor (variable_ctx* var_ctx)
+{
+    DEBUG_ASSERT (var_ctx != nullptr);
+
+    free (var_ctx->variable_arr);
+    free (var_ctx);
+
+    return ;
 }
 
 //--------------------------------------------------------------------------------

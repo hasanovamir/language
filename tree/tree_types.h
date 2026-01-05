@@ -83,15 +83,14 @@ enum class keywords_t
 
 struct variable_t {
     char*  name;
-    int    number;
+    int    len;
 };
 
 //————————————————————————————————————————————————————————————————————————————————
 
 typedef union {
-    int         var_number;
     double      immediate;
-    variable_t  var_ptr;
+    variable_t  variable ;
     math_oper_t math_oper;
     math_func_t math_func;
     keywords_t  keyword;

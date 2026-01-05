@@ -26,8 +26,7 @@ void         VariablesDtor              (variable_ctx* var_ctx);
 void         CopyNodeData               (tree_node_t* destination_node, 
                                          tree_node_t* source_node    );
 void         DebugPrint                 (const char*  str ,int line);
-int          AddVar                     (variable_ctx* var_ctx, const char* name);
-int          GetVarNumber               (const char*   name);
+int          AddVar                     (variable_ctx* var_ctx, variable_t var);
 int          CheckForVariables          (tree_node_t*  node);
 int          CountPrevStrings           (const char* buffer, int pos);
 int          MakeNodeBuffer             (const char* buffer, int size, token_t** tokens);

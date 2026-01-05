@@ -74,7 +74,7 @@ DotDumpNode (FILE* dot_file, tree_node_t* node)
             fprintf (dot_file, "MATH_OPER | VAL = \\%s |", kMathOperations[(int)node->node_data.math_oper]);
             break;
         case node_type_t::Variable :
-            fprintf (dot_file, "VAR | VAL = %.*s  |", node->node_data.var_ptr.number, node->node_data.var_ptr.name);
+            fprintf (dot_file, "VAR | VAL = %.*s  |", node->node_data.variable.len, node->node_data.variable.name);
             break;
         default :
             PRINTERR (Unknown data type);
