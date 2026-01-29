@@ -14,6 +14,7 @@ const char* kKeywords[] =
     "{"       ,
     "}"       ,
     "announce",
+    "def"     ,
 };
 
 const int kNumOfKeywords = sizeof (kKeywords) / sizeof (*kKeywords);
@@ -115,8 +116,6 @@ GetNum (parser_ctx_t* parser_ctx)
     parser_ctx->pos      = pos;
     parser_ctx->cur_line = cur_line;
     parser_ctx->node_num = node_num;
-
-    fprintf (stderr, "num\n");
 
     return language_err_t::Success;
 }

@@ -1,0 +1,14 @@
+"filename", "language", "C++", "Makefile", "comment", "blank", "total"
+"/home/amir_hs/Рабочий стол/proga/language/Makefile", "Makefile", 0, -2, 0, 0, -2
+"/home/amir_hs/Рабочий стол/proga/language/common_dump/common_dump.cpp", "C++", 8, 0, 0, 0, 8
+"/home/amir_hs/Рабочий стол/proga/language/lang/calc_init.cpp", "C++", 9, 0, 1, 4, 14
+"/home/amir_hs/Рабочий стол/proga/language/lang/lang.h", "C++", -6, 0, 0, 0, -6
+"/home/amir_hs/Рабочий стол/proga/language/lang/lexica_lang.cpp", "C++", 1, 0, 0, 0, 1
+"/home/amir_hs/Рабочий стол/proga/language/lang/main.cpp", "C++", 3, 0, 0, -3, 0
+"/home/amir_hs/Рабочий стол/proga/language/lang/musor.cpp", "C++", -17, 0, -1, -2, -20
+"/home/amir_hs/Рабочий стол/proga/language/lang/syntax_lang.cpp", "C++", 134, 0, 0, 69, 203
+"/home/amir_hs/Рабочий стол/proga/language/stack/stack.cpp", "C++", -36, 0, -1, -8, -45
+"/home/amir_hs/Рабочий стол/proga/language/stack/stack.h", "C++", -2, 0, 0, 0, -2
+"/home/amir_hs/Рабочий стол/proga/language/tree/tree_init_alloc.cpp", "C++", 7, 0, 0, 0, 7
+"/home/amir_hs/Рабочий стол/proga/language/tree/tree_types.h", "C++", 2, 0, 0, 0, 2
+"Total", "-", 103, -2, -1, 60, 160

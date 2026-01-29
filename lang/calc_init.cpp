@@ -40,18 +40,12 @@ ClearDump (void)
 {
     char command_1[CommonStringSize] = "";
     char command_2[CommonStringSize] = "";
-    char command_3[CommonStringSize] = "";
-    char command_4[CommonStringSize] = "";
 
     snprintf (command_1, CommonStringSize, "rm dump/svg/*.svg");
     snprintf (command_2, CommonStringSize, "rm dump/dot/*.dot");
-    snprintf (command_3, CommonStringSize, "rm dump/TeX/*.tex");
-    snprintf (command_4, CommonStringSize, "rm dump/pdf/*.pdf");
 
     system (command_1);
     system (command_2);
-    system (command_3);
-    system (command_4);
 }
 
 //--------------------------------------------------------------------------------

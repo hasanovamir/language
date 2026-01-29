@@ -2,25 +2,36 @@
 
 //--------------------------------------------------------------------------------
 
+static int pos;
+static int node_num;
+
+static const token_t* tokens;
+
+//--------------------------------------------------------------------------------
+
 static language_err_t VarArrCtor  (variable_ctx** var_ctx);
 static void           VarArrDtor  (variable_ctx*  var_ctx);
-static bool           CheckForVar (variable_t var);
+static bool           CheckForVar (variable_t var, variable_type_t type, int params_count);
 
-static tree_node_t* GetP          (const token_t* tokens, int* pos, int node_num);
-static tree_node_t* GetMul        (const token_t* tokens, int* pos, int node_num);
-static tree_node_t* GetAdd        (const token_t* tokens, int* pos, int node_num);
-static tree_node_t* GetN          (const token_t* tokens, int* pos, int node_num);
-static tree_node_t* GetG          (const token_t* tokens, int* pos, int node_num);
-static tree_node_t* GetV          (const token_t* tokens, int* pos, int node_num);
-static tree_node_t* GetExp        (const token_t* tokens, int* pos, int node_num);
-static tree_node_t* GetEqual      (const token_t* tokens, int* pos, int node_num);
-static tree_node_t* GetAss        (const token_t* tokens, int* pos, int node_num);
-static tree_node_t* GetAnd        (const token_t* tokens, int* pos, int node_num);
-static tree_node_t* GetFigBracket (const token_t* tokens, int* pos, int node_num);
-static tree_node_t* GetIfWhile    (const token_t* tokens, int* pos, int node_num);
-static tree_node_t* GetElse       (const token_t* tokens, int* pos, int node_num);
-static tree_node_t* GetStatement  (const token_t* tokens, int* pos, int node_num);
-static tree_node_t* GetAnnounce   (const token_t* tokens, int* pos, int node_num);
+static tree_node_t* GetP             ();
+static tree_node_t* GetMul           ();
+static tree_node_t* GetAdd           ();
+static tree_node_t* GetN             ();
+static tree_node_t* GetG             ();
+static tree_node_t* GetV             ();
+static tree_node_t* GetExp           ();
+static tree_node_t* GetEqual         ();
+static tree_node_t* GetAss           ();
+static tree_node_t* GetAnd           ();
+static tree_node_t* GetFigBracket    ();
+static tree_node_t* GetIfWhile       ();
+static tree_node_t* GetElse          ();
+static tree_node_t* GetStatement     ();
+static tree_node_t* GetAnnounce      ();
+static tree_node_t* GetFunction      ();
+static tree_node_t* GetFooCall       ();
+static tree_node_t* GetFooCallParams (int* params_count);
+static tree_node_t* GetFooParams     (int* params_count);
 
 //--------------------------------------------------------------------------------
 
@@ -29,27 +40,35 @@ static stack_t stk = {};
 //--------------------------------------------------------------------------------
 
 tree_node_t*
-ReadTree (const token_t* tokens, int node_num)
+ReadTree (const token_t* tkn, int node_n)
 {
-    DEBUG_ASSERT (tokens != nullptr);
+    DEBUG_ASSERT (tkn != nullptr);
+
+    pos = 0;
+
+    node_num = node_n;
+
+    tokens = tkn;
 
     stack_init (&stk, 10);
 
-    int pos = 0;
+    tree_node_t* tree = GetG ();
 
-    return GetG (tokens, &pos, node_num);
+    stack_destroy (&stk);
+    
+    return tree;
 }
 
 //--------------------------------------------------------------------------------
 
 static tree_node_t*
-GetP (const token_t* tokens, int* pos, int node_num)
+GetP ()
 {
     DEBUG_ASSERT (tokens != nullptr);
 
     CHECK_POS;
 
-    tree_node_t* cur_node = tokens[*pos].node;
+    tree_node_t* cur_node = tokens[pos].node;
 
     node_type_t  type    = cur_node->type;
     keywords_t   keyword = cur_node->node_data.keyword;
@@ -57,39 +76,43 @@ GetP (const token_t* tokens, int* pos, int node_num)
     if (type    == node_type_t::Keyword && 
         keyword == keywords_t ::open_bracket) {
 
-        *pos += 1;
+        MyFree (cur_node);
 
-        if (*pos >= node_num) {
-            DebugPrint ("Nothing after bracket", tokens[*pos - 1].line);
+        pos += 1;
+
+        if (pos >= node_num) {
+            DebugPrint ("Nothing after bracket", tokens[pos - 1].line);
             return nullptr;
         }
 
-        tree_node_t* node = GetAnd (tokens, pos, node_num);
+        tree_node_t* node = GetAnd ();
 
-        if (*pos >= node_num) {
-            DebugPrint ("No close bracket", tokens[*pos - 1].line);
+        if (pos >= node_num) {
+            DebugPrint ("No close bracket", tokens[pos - 1].line);
             return nullptr;
         }
 
-        cur_node = tokens[*pos].node;
+        cur_node = tokens[pos].node;
         type     = cur_node->type;
         keyword  = cur_node->node_data.keyword;
 
         if (type != node_type_t::Keyword || keyword != keywords_t::close_bracket) {
-            DebugPrint ("No close bracket", tokens[*pos - 1].line);
+            DebugPrint ("No close bracket", tokens[pos - 1].line);
             
             return nullptr;
         }
 
-        *pos += 1;
+        MyFree (cur_node);
+
+        pos += 1;
     
         return node;
     }
     else if (type == node_type_t::Constant) {
-        return GetN (tokens, pos, node_num);
+        return GetN ();
     }
     else if (type == node_type_t::Variable) {
-        return GetV (tokens, pos, node_num);
+        return GetV ();
     }
 
     fprintf (stderr, "TI EBLAN (GetP)\n");
@@ -100,39 +123,39 @@ GetP (const token_t* tokens, int* pos, int node_num)
 //--------------------------------------------------------------------------------
 
 static tree_node_t*
-GetMul (const token_t* tokens, int* pos, int node_num)
+GetMul ()
 {
     DEBUG_ASSERT (tokens != nullptr);
 
     CHECK_POS;
 
-    tree_node_t* node_1  = GetExp (tokens, pos, node_num);
+    tree_node_t* node_1  = GetExp ();
 
     if (node_1 == nullptr) {
         return nullptr;
     }
 
-    if (*pos >= node_num - 1) {
+    if (pos >= node_num - 1) {
         return node_1;
     }
 
-    tree_node_t* cur_node = tokens[*pos].node;
+    tree_node_t* cur_node = tokens[pos].node;
     math_oper_t  m_oper   = cur_node->node_data.math_oper;
 
-    while (cur_node->type == node_type_t::MathOper && *pos < node_num &&
+    while (cur_node->type == node_type_t::MathOper && pos < node_num &&
           (m_oper == math_oper_t::Multiplication || m_oper == math_oper_t::Division)) {
 
-        (*pos)++;
+        (pos)++;
 
-        if (*pos > node_num - 1) {
-            DebugPrint ("too few arguments to math operator1", tokens[*pos - 1].line);
+        if (pos > node_num - 1) {
+            DebugPrint ("too few arguments to math operator1", tokens[pos - 1].line);
             return nullptr;
         }
         
-        tree_node_t* node_2 = GetExp (tokens, pos, node_num);
+        tree_node_t* node_2 = GetExp ();
 
         if (node_2 == nullptr) {
-            DebugPrint ("too few arguments to math operator2", tokens[*pos].line);
+            DebugPrint ("too few arguments to math operator2", tokens[pos].line);
             return nullptr;
         }
 
@@ -141,8 +164,8 @@ GetMul (const token_t* tokens, int* pos, int node_num)
 
         node_1 = cur_node;
 
-        if (*pos < node_num) {
-            cur_node = tokens[*pos].node;
+        if (pos < node_num) {
+            cur_node = tokens[pos].node;
             m_oper   = cur_node->node_data.math_oper;
         }
         else {
@@ -156,40 +179,40 @@ GetMul (const token_t* tokens, int* pos, int node_num)
 //--------------------------------------------------------------------------------
 
 static tree_node_t*
-GetAdd (const token_t* tokens, int* pos, int node_num)
+GetAdd ()
 {
     DEBUG_ASSERT (tokens != nullptr);
 
     CHECK_POS;
 
-    tree_node_t* node_1 = GetMul (tokens, pos, node_num);
+    tree_node_t* node_1 = GetMul ();
 
     if (node_1 == nullptr) {
         return nullptr;
     }
 
-    if (*pos >= node_num - 1) {
+    if (pos >= node_num - 1) {
         return node_1;
     }
 
-    tree_node_t* cur_node = tokens[*pos].node;
+    tree_node_t* cur_node = tokens[pos].node;
 
     math_oper_t  m_oper   = cur_node->node_data.math_oper;
 
-    while (cur_node->type == node_type_t::MathOper && *pos < node_num &&
+    while (cur_node->type == node_type_t::MathOper && pos < node_num &&
           (m_oper == math_oper_t::Addition || m_oper == math_oper_t::Difference)) {
 
-        (*pos)++;
+        (pos)++;
 
-        if (*pos > node_num - 1) {
-            DebugPrint ("too few arguments to math operator3", tokens[*pos - 1].line);
+        if (pos > node_num - 1) {
+            DebugPrint ("too few arguments to math operator3", tokens[pos - 1].line);
             return nullptr;
         }
 
-        tree_node_t* node_2 = GetMul (tokens, pos, node_num);
+        tree_node_t* node_2 = GetMul ();
 
         if (node_2 == nullptr) {
-            DebugPrint ("too few arguments to math operator4", tokens[*pos].line);
+            DebugPrint ("too few arguments to math operator4", tokens[pos].line);
             return nullptr;
         }
 
@@ -198,8 +221,8 @@ GetAdd (const token_t* tokens, int* pos, int node_num)
 
         node_1 = cur_node;
 
-        if (*pos < node_num) {
-            cur_node = tokens[*pos].node;
+        if (pos < node_num) {
+            cur_node = tokens[pos].node;
             m_oper   = cur_node->node_data.math_oper;
         }
         else {
@@ -213,19 +236,19 @@ GetAdd (const token_t* tokens, int* pos, int node_num)
 //--------------------------------------------------------------------------------
 
 static tree_node_t*
-GetN (const token_t* tokens, int* pos, int node_num)
+GetN ()
 {
     DEBUG_ASSERT (tokens != nullptr);
 
     CHECK_POS;
 
-    tree_node_t* cur_node = tokens[*pos].node;
+    tree_node_t* cur_node = tokens[pos].node;
 
     if (cur_node->type != node_type_t::Constant) {
         return nullptr;
     }
 
-    *pos += 1;
+    pos += 1;
 
     return cur_node;
 }
@@ -233,36 +256,24 @@ GetN (const token_t* tokens, int* pos, int node_num)
 //--------------------------------------------------------------------------------
 
 static tree_node_t*
-GetG (const token_t* tokens, int* pos, int node_num)
-{
-    tree_node_t* node = GetStatement (tokens, pos, node_num);
-
-    if (node == nullptr) fprintf (stderr, "nullptr in getG\n");
-    
-    return node;
-}
-
-//--------------------------------------------------------------------------------
-
-static tree_node_t*
-GetV (const token_t* tokens, int* pos, int node_num)
+GetV ()
 {
     DEBUG_ASSERT (tokens != nullptr);
 
     CHECK_POS;
 
-    tree_node_t* cur_node  = tokens[*pos].node;
+    tree_node_t* cur_node  = tokens[pos].node;
 
     if (cur_node->type != node_type_t::Variable) {
         return nullptr;
     }
 
-    if (CheckForVar (cur_node->node_data.variable) == false) {
-        DebugPrint ("Unkown variable", tokens[*pos].line);
+    if (CheckForVar (cur_node->node_data.variable, variable_type_t::var, 0) == false) {
+        DebugPrint ("Unknown variable", tokens[pos].line);
         return nullptr;
     }
 
-    *pos += 1;
+    pos += 1;
 
     return cur_node;
 }
@@ -270,13 +281,13 @@ GetV (const token_t* tokens, int* pos, int node_num)
 //--------------------------------------------------------------------------------
 
 static tree_node_t*
-GetExp (const token_t* tokens, int* pos, int node_num)
+GetExp ()
 {
     DEBUG_ASSERT (tokens != nullptr);
 
-    tree_node_t* node_1 = GetP (tokens, pos, node_num);
+    tree_node_t* node_1 = GetP ();
 
-    if (*pos == node_num - 1) {
+    if (pos == node_num - 1) {
         return node_1;
     }
 
@@ -284,20 +295,20 @@ GetExp (const token_t* tokens, int* pos, int node_num)
         return nullptr;
     }
 
-    tree_node_t* cur_node = tokens[*pos].node;
+    tree_node_t* cur_node = tokens[pos].node;
 
     while (cur_node->type == node_type_t::MathOper && cur_node->node_data.math_oper == math_oper_t::Exponentiation) {
-        (*pos)++;
+        (pos)++;
 
-        if (*pos > node_num - 1) {
-            DebugPrint ("too few arguments to math operator5", tokens[*pos].line);
+        if (pos > node_num - 1) {
+            DebugPrint ("too few arguments to math operator5", tokens[pos].line);
             return nullptr;
         }
 
-        tree_node_t* node_2 = GetP (tokens, pos, node_num);
+        tree_node_t* node_2 = GetP ();
 
         if (node_2 == nullptr) {
-            DebugPrint ("too few arguments to math operator6", tokens[*pos].line);
+            DebugPrint ("too few arguments to math operator6", tokens[pos].line);
             return nullptr;
         }
 
@@ -306,8 +317,8 @@ GetExp (const token_t* tokens, int* pos, int node_num)
 
         node_1 = cur_node;
 
-        if (*pos < node_num - 1) {
-            cur_node = tokens[*pos].node;
+        if (pos < node_num - 1) {
+            cur_node = tokens[pos].node;
         }
         else {
             break;
@@ -320,24 +331,24 @@ GetExp (const token_t* tokens, int* pos, int node_num)
 //--------------------------------------------------------------------------------
 
 static tree_node_t*
-GetEqual (const token_t* tokens, int* pos, int node_num)
+GetEqual ()
 {
     DEBUG_ASSERT (tokens != nullptr);
 
     CHECK_POS;
 
-    tree_node_t* node_1 = GetAdd (tokens, pos, node_num);
+    tree_node_t* node_1 = GetAdd ();
 
     if (node_1 == nullptr) {
         return nullptr;
     }
 
-    if (*pos >= node_num - 1) {
+    if (pos >= node_num - 1) {
         return node_1;
     }
 
-    int          cur_line = tokens[*pos].line;
-    tree_node_t* cur_node = tokens[*pos].node;
+    int          cur_line = tokens[pos].line;
+    tree_node_t* cur_node = tokens[pos].node;
 
     math_oper_t m_oper = cur_node->node_data.math_oper;
 
@@ -346,9 +357,9 @@ GetEqual (const token_t* tokens, int* pos, int node_num)
          m_oper == math_oper_t::Above    || m_oper == math_oper_t::AboveEqual  ||
          m_oper == math_oper_t::Below    || m_oper == math_oper_t::BelowEqual)) {
 
-        *pos += 1;
+        pos += 1;
 
-        tree_node_t* node_2 = GetAdd (tokens, pos, node_num);
+        tree_node_t* node_2 = GetAdd ();
 
         if (node_2 == nullptr) {
             DebugPrint ("too few arguments to math operator7", cur_line);
@@ -367,35 +378,35 @@ GetEqual (const token_t* tokens, int* pos, int node_num)
 
 //--------------------------------------------------------------------------------
 
-static tree_node_t* GetAss (const token_t* tokens, int* pos, int node_num)
+static tree_node_t* GetAss ()
 {
     DEBUG_ASSERT (tokens != nullptr);
 
     CHECK_POS;
 
-    if (tokens[*pos].node->type != node_type_t::Variable) {
+    if (tokens[pos].node->type != node_type_t::Variable) {
         return nullptr;
     }
 
-    tree_node_t* node_1 = GetV (tokens, pos, node_num);
+    tree_node_t* node_1 = GetV ();
 
     if (node_1 == nullptr) {
         return nullptr;
     }
 
-    if (*pos >= node_num) {
+    if (pos >= node_num) {
         return node_1;
     }
 
-    int          cur_line = tokens[*pos].line;
-    tree_node_t* cur_node = tokens[*pos].node;
+    int          cur_line = tokens[pos].line;
+    tree_node_t* cur_node = tokens[pos].node;
 
     if (cur_node->type                == node_type_t::MathOper &&
         cur_node->node_data.math_oper == math_oper_t::Assignment) {
 
-        *pos += 1;
+        pos += 1;
 
-        tree_node_t* node_2 = GetAnd (tokens, pos, node_num);
+        tree_node_t* node_2 = GetAnd ();
 
         if (node_2 == nullptr) {
             DebugPrint ("too few arguments to math operator8", cur_line);
@@ -405,15 +416,15 @@ static tree_node_t* GetAss (const token_t* tokens, int* pos, int node_num)
         cur_node->left_node  = node_1;
         cur_node->right_node = node_2;
 
-        tree_node_t* node_3 = tokens[*pos].node;
+        tree_node_t* node_3 = tokens[pos].node;
 
         if (node_3->type              != node_type_t::Keyword || 
-            node_3->node_data.keyword != keywords_t::semicolon ) {
-            DebugPrint ("forgotten semicolon", tokens[*pos].line);
+            node_3->node_data.keyword != keywords_t ::semicolon ) {
+            DebugPrint ("forgotten semicolon", tokens[pos].line);
             return nullptr;
         }
 
-        *pos += 1;
+        pos += 1;
 
         node_3->left_node = cur_node;
 
@@ -426,33 +437,33 @@ static tree_node_t* GetAss (const token_t* tokens, int* pos, int node_num)
 //--------------------------------------------------------------------------------
 
 static tree_node_t*
-GetAnd (const token_t* tokens, int* pos, int node_num)
+GetAnd ()
 {
     DEBUG_ASSERT (tokens != nullptr);
 
     CHECK_POS;
 
-    tree_node_t* node_1 = GetEqual (tokens, pos, node_num);
+    tree_node_t* node_1 = GetEqual ();
 
     if (node_1 == nullptr) {
         return nullptr;
     }
 
-    if (*pos >= node_num) {
+    if (pos >= node_num) {
         return node_1;
     }
 
-    int          cur_line = tokens[*pos].line;
-    tree_node_t* cur_node = tokens[*pos].node;
+    int          cur_line = tokens[pos].line;
+    tree_node_t* cur_node = tokens[pos].node;
 
     math_oper_t m_oper = cur_node->node_data.math_oper;
 
     while ((cur_node->type == node_type_t::MathOper) &&
         (m_oper == math_oper_t::And || m_oper == math_oper_t::Or)) {
 
-        *pos += 1;
+        pos += 1;
 
-        tree_node_t* node_2 = GetEqual (tokens, pos, node_num);
+        tree_node_t* node_2 = GetEqual ();
 
         if (node_2 == nullptr) {
             DebugPrint ("too few arguments to math operator9", cur_line);
@@ -465,9 +476,9 @@ GetAnd (const token_t* tokens, int* pos, int node_num)
         node_1 = cur_node;
 
         
-        if (*pos < node_num) {
-            cur_node = tokens[*pos].node;
-            cur_line = tokens[*pos].line;
+        if (pos < node_num) {
+            cur_node = tokens[pos].node;
+            cur_line = tokens[pos].line;
             m_oper   = cur_node->node_data.math_oper;
         }
         else {
@@ -481,38 +492,32 @@ GetAnd (const token_t* tokens, int* pos, int node_num)
 //--------------------------------------------------------------------------------
 
 static tree_node_t*
-GetIfWhile (const token_t* tokens, int* pos, int node_num)
+GetIfWhile ()
 {
     DEBUG_ASSERT (tokens != nullptr);
 
     CHECK_POS;
 
-    int          cur_line = tokens[*pos].line;
-    tree_node_t* cur_node = tokens[*pos].node;
+    int          cur_line = tokens[pos].line;
+    tree_node_t* cur_node = tokens[pos].node;
 
     if (cur_node->type == node_type_t::Keyword &&
             (cur_node->node_data.keyword == keywords_t::if_kw ||
              cur_node->node_data.keyword == keywords_t::while_kw)) {
-        *pos += 1;
+        pos += 1;
 
-        tree_node_t* node_1 = GetP (tokens, pos, node_num);
+        tree_node_t* node_1 = GetP ();
 
-        if (node_1 == nullptr || *pos >= node_num) {
-            DebugPrint ("too few arguments to if-operator1", cur_line);
-            return nullptr;
-        }
+        if (node_1 == nullptr || pos >= node_num) return nullptr;
 
-        tree_node_t* node_2 = GetFigBracket (tokens, pos, node_num);
+        tree_node_t* node_2 = GetFigBracket ();
 
-        if (node_2 == nullptr) {
-            DebugPrint ("too few arguments to if-operator2", tokens[*pos].line);
-            return nullptr;
-        }
+        if (node_2 == nullptr) return nullptr;
         
         cur_node->left_node  = node_1;
         cur_node->right_node = node_2;
 
-        tree_node_t* node_3 = GetElse (tokens, pos, node_num);
+        tree_node_t* node_3 = GetElse ();
 
         if (node_3 != nullptr) {
             node_3  ->left_node  = node_2;
@@ -528,18 +533,18 @@ GetIfWhile (const token_t* tokens, int* pos, int node_num)
 //--------------------------------------------------------------------------------
 
 static tree_node_t*
-GetFigBracket (const token_t* tokens, int* pos, int node_num)
+GetFigBracket ()
 {
     DEBUG_ASSERT (tokens != nullptr);
 
     CHECK_POS;
 
-    int          cur_line = tokens[*pos].line;
-    tree_node_t* cur_node = tokens[*pos].node;
+    int          cur_line = tokens[pos].line;
+    tree_node_t* cur_node = tokens[pos].node;
 
     if (cur_node->type              == node_type_t::Keyword &&
         cur_node->node_data.keyword == keywords_t ::fig_open_bracket) {
-        *pos += 1;
+        pos += 1;
 
         MyFree (cur_node);
 
@@ -551,26 +556,26 @@ GetFigBracket (const token_t* tokens, int* pos, int node_num)
 
         stack_push (&stk, (void*) v_ctx);
 
-        tree_node_t* node_1 = GetStatement (tokens ,pos, node_num);
+        tree_node_t* node_1 = GetStatement ();
         
         if (node_1 == nullptr) {
             return nullptr;
         }
 
-        if (*pos >= node_num) {
-            DebugPrint ("No close figure bracket", tokens[*pos].line);
+        if (pos >= node_num) {
+            DebugPrint ("No close figure bracket", tokens[pos].line);
             return nullptr;
         }
 
-        tree_node_t* node_2 = tokens[*pos].node;
+        tree_node_t* node_2 = tokens[pos].node;
 
         if (node_2->type              != node_type_t::Keyword || 
             node_2->node_data.keyword != keywords_t ::fig_close_bracket) {
-            DebugPrint ("No close figure bracket", tokens[*pos].line);
+            DebugPrint ("No close figure bracket", tokens[pos].line);
             return nullptr;
         }
 
-        *pos += 1;
+        pos += 1;
 
         MyFree (node_2);
 
@@ -589,25 +594,22 @@ GetFigBracket (const token_t* tokens, int* pos, int node_num)
 //--------------------------------------------------------------------------------
 
 static tree_node_t*
-GetElse (const token_t* tokens, int* pos, int node_num)
+GetElse ()
 {
     DEBUG_ASSERT (tokens != nullptr);
 
     CHECK_POS;
 
-    int          cur_line = tokens[*pos].line; 
-    tree_node_t* cur_node = tokens[*pos].node;
+    int          cur_line = tokens[pos].line; 
+    tree_node_t* cur_node = tokens[pos].node;
 
     if (cur_node->type              == node_type_t::Keyword &&
         cur_node->node_data.keyword == keywords_t ::else_kw   ) {
-        *pos += 1;
+        pos += 1;
 
-        tree_node_t* node_1 = GetFigBracket (tokens, pos, node_num);
+        tree_node_t* node_1 = GetFigBracket ();
 
-        if (node_1 == nullptr) {
-            DebugPrint ("too few arguments to else-operator", tokens[*pos].line);
-            return nullptr;
-        }
+        if (node_1 == nullptr) return nullptr;
 
         cur_node->right_node = node_1;
 
@@ -620,7 +622,7 @@ GetElse (const token_t* tokens, int* pos, int node_num)
 //--------------------------------------------------------------------------------
 
 static tree_node_t*
-GetStatement (const token_t* tokens, int* pos, int node_num)
+GetStatement ()
 {
     DEBUG_ASSERT (tokens != nullptr);
 
@@ -632,17 +634,29 @@ GetStatement (const token_t* tokens, int* pos, int node_num)
     tree_node_t* cur_node = head;
 
     while (true) {
-        if ((cur_node->right_node = GetAnnounce (tokens, pos, node_num))) {
+        if ((cur_node->right_node = GetAnnounce ())) {
             cur_node = cur_node->right_node;
         }
-        else if (*pos < node_num && tokens[*pos].node->type == node_type_t::Variable) {
-            cur_node->right_node = GetAss (tokens, pos, node_num);
+        else if ((cur_node->right_node = GetFooCall ())) {
+            cur_node = cur_node->right_node;
+        }
+        else if (pos < node_num && tokens[pos].node->type == node_type_t::Variable) {
+            cur_node->right_node = GetAss ();
             if (cur_node->right_node == nullptr) {
                 return nullptr;
             }
             cur_node = cur_node->right_node;
         }
-        else if ((cur_node->right_node = GetIfWhile (tokens, pos, node_num))) {
+        else if ((cur_node->right_node = GetIfWhile ())) {
+            tree_node_t* con = NewNode (node_type_t::Connection, MakeDigitData (0), 
+                                        nullptr                , nullptr         );
+            con->left_node = cur_node->right_node;
+
+            cur_node->right_node = con;
+
+            cur_node = con;
+        }
+        else if ((cur_node->right_node = GetAnd ())) {
             tree_node_t* con = NewNode (node_type_t::Connection, MakeDigitData (0), 
                                         nullptr                , nullptr         );
             con->left_node = cur_node->right_node;
@@ -662,20 +676,20 @@ GetStatement (const token_t* tokens, int* pos, int node_num)
 //--------------------------------------------------------------------------------
 
 static tree_node_t*
-GetAnnounce (const token_t* tokens, int* pos, int node_num)
+GetAnnounce ()
 {
     DEBUG_ASSERT (tokens != nullptr);
 
     CHECK_POS;
  
-    int          cur_line = tokens[*pos].line;
-    tree_node_t* cur_node = tokens[*pos].node;
+    int          cur_line = tokens[pos].line;
+    tree_node_t* cur_node = tokens[pos].node;
 
     if (cur_node->type              == node_type_t::Keyword &&
         cur_node->node_data.keyword == keywords_t ::announce ) {
-        *pos += 1;
+        pos += 1;
 
-        if (*pos >= node_num || tokens[*pos].node->type != node_type_t::Variable) {
+        if (pos >= node_num || tokens[pos].node->type != node_type_t::Variable) {
             DebugPrint ("Too few arguments to announce", cur_line);
             return nullptr;
         }
@@ -686,11 +700,12 @@ GetAnnounce (const token_t* tokens, int* pos, int node_num)
 
         variable_ctx* cur_variables = (variable_ctx*) cur_vbl;
         
-        AddVar (cur_variables, tokens[*pos].node->node_data.variable);
+        AddVar (cur_variables, tokens[pos].node->node_data.variable, 
+                variable_type_t::var, 0);
 
         stack_push (&stk, cur_variables);
 
-        cur_node->left_node = GetAss (tokens, pos, node_num);
+        cur_node->left_node = GetAss ();
 
         tree_node_t* left = cur_node->left_node;
 
@@ -708,8 +723,187 @@ GetAnnounce (const token_t* tokens, int* pos, int node_num)
 
 //--------------------------------------------------------------------------------
 
+static tree_node_t*
+GetFooParams (int* params_count)
+{
+    DEBUG_ASSERT (tokens != nullptr);
+
+    CHECK_POS;
+
+    int          cur_line = tokens[pos].line;
+    tree_node_t* cur_node = tokens[pos].node;
+
+    if (cur_node->type              == node_type_t::Keyword &&
+        cur_node->node_data.keyword == keywords_t ::open_bracket) {
+        pos += 1;
+
+        MyFree (cur_node);
+
+        if (pos >= node_num) {
+            DebugPrint ("Incorrect function parameters", cur_line);
+            return nullptr;
+        }
+
+        if (pos < node_num && 
+            (cur_node = tokens[pos].node)->type == node_type_t::Keyword &&
+             cur_node->node_data.keyword         == keywords_t ::close_bracket) {
+
+            MyFree (cur_node);
+            
+            return nullptr;
+        }
+
+        void* v_ctx = nullptr;
+
+        stack_pop (&stk, &v_ctx);
+
+        variable_ctx* var_ctx = (variable_ctx*) v_ctx;
+
+        *params_count += 1;
+
+        tree_node_t* cur_var = cur_node;
+
+        if (cur_node->type != node_type_t::Variable) {
+            DebugPrint ("Incorrect foo params", tokens[pos].line);
+            return nullptr;
+        }
+
+        AddVar (var_ctx, cur_node->node_data.variable, variable_type_t::var, 0);
+
+        pos += 1;
+
+        while (pos < node_num && tokens[pos].node->type == node_type_t::Keyword
+                  && tokens[pos].node->node_data.keyword == keywords_t ::comma  ) {
+            MyFree (tokens[pos].node);
+            
+            pos          += 1;
+            *params_count += 1;
+
+            
+            if (pos >= node_num) {
+                DebugPrint ("Incorrect function params", tokens[pos].line);
+                return nullptr;    
+            }
+
+            if ((cur_var->right_node = tokens[pos].node)->type != node_type_t::Variable) {
+            if ( cur_var->right_node->type == node_type_t::Keyword  &&
+                 cur_var->right_node->node_data.keyword == keywords_t::close_bracket) {
+                MyFree (cur_var->right_node);                    
+            }
+
+            DebugPrint ("Incorrect function params", tokens[pos].line);
+            return nullptr;
+        }
+
+            pos += 1;
+
+            cur_var = cur_var->right_node;
+
+            AddVar (var_ctx, cur_node->node_data.variable, variable_type_t::var, 0);
+        }
+
+        tree_node_t* node_2 = tokens[pos].node;
+
+        if (node_2->type              != node_type_t::Keyword || 
+            node_2->node_data.keyword != keywords_t ::close_bracket) {
+            DebugPrint ("No close bracket1", tokens[pos].line);
+            return nullptr;
+        }
+
+        pos += 1;
+
+        MyFree (node_2);
+
+        stack_push (&stk, (void*) var_ctx);
+
+        return cur_node;
+    }
+
+    return nullptr;
+}
+
+//--------------------------------------------------------------------------------
+
+static tree_node_t*
+GetFunction ()
+{
+    DEBUG_ASSERT (tokens != nullptr);
+
+    CHECK_POS;
+
+    int          cur_line = tokens[pos].line;
+    tree_node_t* cur_node = tokens[pos].node;
+
+    if (cur_node->type == node_type_t::Keyword &&
+        cur_node->node_data.keyword == keywords_t::def) {
+        pos += 1;
+        
+        if (pos >= node_num ||
+            tokens[pos].node->type != node_type_t::Variable) {
+
+            DebugPrint ("Incorrect function definition", tokens[pos - 1].line);
+            return nullptr;
+        }
+
+        tree_node_t* foo_name = tokens[pos].node;
+
+        pos += 1;
+
+        int params_count = 0;
+
+        variable_ctx* v_ctx = nullptr;
+
+        if (VarArrCtor (&v_ctx) == language_err_t::AlocationErr) {
+            return nullptr;
+        }
+
+        stack_push (&stk, (void*) v_ctx);
+
+        tree_node_t* foo_params = GetFooParams ( &params_count);
+
+        tree_node_t* name_and_params = NewNode (node_type_t::Connection, MakeDigitData (0), 
+                                                nullptr                , nullptr         );
+        
+        void* cur_vbl = nullptr;
+
+        stack_pop (&stk, &cur_vbl);
+        stack_pop (&stk, &cur_vbl);
+
+        variable_ctx* cur_variables = (variable_ctx*) cur_vbl;
+        
+        AddVar (cur_variables, foo_name->node_data.variable, 
+                variable_type_t::foo, params_count);
+
+        stack_push (&stk, cur_variables);
+        stack_push (&stk, (void*) v_ctx);
+
+        name_and_params->left_node  = foo_name  ;
+        name_and_params->right_node = foo_params;
+
+        cur_node->left_node = name_and_params;
+
+        tree_node_t* function_content = GetFigBracket ();
+
+        if (function_content == nullptr) return nullptr;
+
+        cur_node->right_node = function_content;
+
+        void* tmp = nullptr;
+
+        stack_pop (&stk, &tmp);
+
+        VarArrDtor ((variable_ctx*) tmp);
+
+        return cur_node;
+    }
+
+    return nullptr;
+}
+
+//--------------------------------------------------------------------------------
+
 static bool
-CheckForVar (variable_t var)
+CheckForVar (variable_t var, variable_type_t type, int params_count)
 {
     int var_len = var.len;
 
@@ -729,13 +923,15 @@ CheckForVar (variable_t var)
 
         cur_len = (cur_len > var_len) ? var_len : cur_len;
 
-        if (strncmp (var.name, cur_var, cur_len) == 0) {
+        if (strncmp (var.name, cur_var, cur_len) == 0 && 
+            var.type == var_ctx->variable_arr[i].type &&
+            var.foo_params_count == params_count) {
             stack_push (&stk, v_arr);
             return true;
         }
     }
 
-    if (CheckForVar (var)) {
+    if (CheckForVar (var, type ,params_count)) {
         stack_push (&stk, v_arr);
         return true;
     }
@@ -782,6 +978,170 @@ VarArrDtor (variable_ctx* var_ctx)
     free (var_ctx);
 
     return ;
+}
+
+//--------------------------------------------------------------------------------
+
+static tree_node_t*
+GetG ()
+{
+    DEBUG_ASSERT (tokens != nullptr);
+
+    CHECK_POS;
+
+    variable_t* var_arr = (variable_t*) calloc (20, sizeof (variable_t));
+
+    variable_ctx var_ctx = {.variable_arr = var_arr};
+
+    stack_push (&stk, (void*) (&var_ctx));
+
+    tree_node_t* head = NewNode (node_type_t::Connection, MakeDigitData (0), 
+                                 nullptr                , nullptr         );
+
+    tree_node_t* cur_node = head;
+
+    while (true) {
+        if ((cur_node->right_node = GetAnnounce ())) {
+            cur_node = cur_node->right_node;
+        }
+        else if ((cur_node->right_node = GetFunction ())) {
+            tree_node_t* con = NewNode (node_type_t::Connection, MakeDigitData (0), 
+                                        nullptr                , nullptr         );
+
+            con->left_node = cur_node->right_node;
+            cur_node->right_node = con;
+            cur_node = con;
+        }
+        else {
+            return head;
+        }
+    }
+
+    free (var_arr);
+
+    return head;
+}
+
+//--------------------------------------------------------------------------------
+
+static tree_node_t*
+GetFooCall ()
+{
+    DEBUG_ASSERT (tokens != nullptr);
+
+    if (pos > node_num - 1) return nullptr;
+ 
+    tree_node_t* cur_node  = tokens[pos    ].node;
+    tree_node_t* next_node = tokens[pos + 1].node;
+
+    if (cur_node ->type != node_type_t::Variable ||
+        next_node->type != node_type_t::Keyword  ||
+        next_node->node_data.keyword != keywords_t::open_bracket) {
+        return nullptr;
+    }
+
+    MyFree (next_node);
+
+    pos += 2;
+
+    int foo_params_count = 0;
+
+    tree_node_t* foo_params = GetFooCallParams (&foo_params_count);
+
+    if (!CheckForVar (cur_node->node_data.variable, variable_type_t::foo, foo_params_count)) {
+        DebugPrint ("Unknown function", tokens[pos].line);
+        return nullptr;
+    }
+
+    if (pos >= node_num) {
+        DebugPrint ("No close bracket", tokens[pos - 1].line);
+        return nullptr;
+    }
+
+    tree_node_t* last_node = tokens[pos].node;
+
+    if (last_node->type              != node_type_t::Keyword ||
+        last_node->node_data.keyword != keywords_t ::close_bracket) {
+        DebugPrint ("No close bracket", tokens[pos - 1].line);
+        return nullptr;
+    }
+
+    MyFree (last_node);
+
+    cur_node->left_node = foo_params;
+
+    return cur_node;
+}
+
+//--------------------------------------------------------------------------------
+
+static tree_node_t*
+GetFooCallParams (int* params_count)
+{
+    DEBUG_ASSERT (tokens != nullptr);
+
+    CHECK_POS;
+
+    int          cur_line = tokens[pos].line;
+    tree_node_t* cur_node = tokens[pos].node;
+
+    if (cur_node->type              == node_type_t::Keyword &&
+        cur_node->node_data.keyword == keywords_t::open_bracket) {
+        pos += 1;
+
+        MyFree (cur_node);
+
+        if (pos >= node_num) {
+            DebugPrint ("Incorrect function parameters", cur_line);
+            return nullptr;
+        }
+
+        cur_node = GetAnd ();
+
+        if (cur_node == nullptr) return nullptr;
+
+        *params_count += 1;
+
+        tree_node_t* cur_var = cur_node;
+
+        while (pos < node_num && tokens[pos].node->type == node_type_t::Keyword
+                  && tokens[pos].node->node_data.keyword == keywords_t ::comma  ) {
+            MyFree (tokens[pos].node);
+            
+            pos += 1;
+
+            CHECK_POS;
+
+            int cur_line = tokens[pos].line;
+
+            cur_var->right_node = GetAnd ();
+
+            if (cur_var->right_node == nullptr) {
+                DebugPrint ("Excess comma", cur_line);
+                return nullptr;
+            }
+
+            *params_count += 1;
+
+            cur_var = cur_var->right_node;
+        }
+
+        tree_node_t* node_2 = tokens->node;
+
+        if (node_2->type              != node_type_t::Keyword || 
+            node_2->node_data.keyword != keywords_t ::close_bracket) {
+            DebugPrint ("No close bracket", tokens[pos].line);
+            return nullptr;
+        }
+
+        pos += 1;
+
+        MyFree (node_2);
+
+        return cur_node;
+    }
+
+    return nullptr;
 }
 
 //--------------------------------------------------------------------------------

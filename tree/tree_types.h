@@ -73,17 +73,28 @@ enum class keywords_t
     fig_open_bracket  = 7,
     fig_close_bracket = 8,
     announce          = 9,
+    def               = 10,
 };
 
 //————————————————————————————————————————————————————————————————————————————————
 
-#define CHECK_POS if (*pos >= node_num) {return nullptr;}
+enum class variable_type_t {
+    var = 0,
+    foo = 1,
+};
+
+//————————————————————————————————————————————————————————————————————————————————
+
+#define CHECK_POS if (pos >= node_num) {return nullptr;}
 
 //————————————————————————————————————————————————————————————————————————————————
 
 struct variable_t {
     char*  name;
     int    len;
+
+    int foo_params_count;
+    variable_type_t type;
 };
 
 //————————————————————————————————————————————————————————————————————————————————

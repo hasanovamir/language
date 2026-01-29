@@ -26,13 +26,12 @@ void         VariablesDtor              (variable_ctx* var_ctx);
 void         CopyNodeData               (tree_node_t* destination_node, 
                                          tree_node_t* source_node    );
 void         DebugPrint                 (const char*  str ,int line);
-int          AddVar                     (variable_ctx* var_ctx, variable_t var);
-int          CheckForVariables          (tree_node_t*  node);
+int          AddVar                     (variable_ctx* var_ctx, variable_t var, 
+                                         variable_type_t type, int params_count);
 int          CountPrevStrings           (const char* buffer, int pos);
 int          MakeNodeBuffer             (const char* buffer, int size, token_t** tokens);
 bool         CheckToEquality            (double value_1, double value_2);
 tree_err_t   VariablesInit              (variable_ctx* variables_ctx);
-tree_data_t  MakeVarData                (int         oper_num );
 tree_data_t  MakeDigitData              (double      value    );
 tree_data_t  MakeKeywordData            (keywords_t  oper     );
 tree_data_t  MakeMathOperData           (math_oper_t oper     );

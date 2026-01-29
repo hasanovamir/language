@@ -55,7 +55,7 @@ MakeDigitData (double value)
 //--------------------------------------------------------------------------------
 
 int
-AddVar (variable_ctx* var_ctx, variable_t var)
+AddVar (variable_ctx* var_ctx, variable_t var, variable_type_t type, int params_count)
 {
     CheckVarArr (var_ctx);
 
