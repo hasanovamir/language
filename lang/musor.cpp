@@ -108,7 +108,7 @@ DebugPrint (const char* str ,int line)
 {
     char err_str[CommonStringSize] = "";
 
-    snprintf (err_str, CommonStringSize, "ERROR. Syntax Error in line:%d ", line);
+    snprintf (err_str, CommonStringSize, "ERROR. Syntax Error in line:%d ", line + 1);
 
     if (str != nullptr) {
         strcat (err_str, str);

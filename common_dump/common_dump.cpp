@@ -78,7 +78,7 @@ DotDumpNode (FILE* dot_file, tree_node_t* node)
             break;
         default :
             PRINTERR (Unknown data type);
-            fprintf (stderr, "node type = %d\n", node->type);
+            fprintf (stderr, "node type = %d\n", (int) node->type);
             return ;
     }
 

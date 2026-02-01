@@ -115,8 +115,6 @@ GetP ()
         return GetV ();
     }
 
-    fprintf (stderr, "TI EBLAN (GetP)\n");
-
     return nullptr;
 }
 
@@ -557,10 +555,6 @@ GetFigBracket ()
         stack_push (&stk, (void*) v_ctx);
 
         tree_node_t* node_1 = GetStatement ();
-        
-        if (node_1 == nullptr) {
-            return nullptr;
-        }
 
         if (pos >= node_num) {
             DebugPrint ("No close figure bracket", tokens[pos].line);
@@ -571,6 +565,7 @@ GetFigBracket ()
 
         if (node_2->type              != node_type_t::Keyword || 
             node_2->node_data.keyword != keywords_t ::fig_close_bracket) {
+            fprintf (stderr, "idx = %d type = %d data = %d", node_2->idx, node_2->type, node_2->node_data.keyword);
             DebugPrint ("No close figure bracket", tokens[pos].line);
             return nullptr;
         }
@@ -587,6 +582,8 @@ GetFigBracket ()
 
         return cur_node;
     }
+fprintf (stderr, "idx = %d type = %d",cur_node->idx, (int) cur_node->type);
+    DebugPrint ("No figure bracket", tokens[pos].line);
 
     return nullptr;
 }
@@ -744,12 +741,20 @@ GetFooParams (int* params_count)
             return nullptr;
         }
 
-        if (pos < node_num && 
-            (cur_node = tokens[pos].node)->type == node_type_t::Keyword &&
-             cur_node->node_data.keyword         == keywords_t ::close_bracket) {
+        cur_node = tokens[pos].node;
+
+        if (cur_node->type              == node_type_t::Keyword &&
+            cur_node->node_data.keyword == keywords_t ::close_bracket) {
 
             MyFree (cur_node);
+
+            pos += 1;
             
+            return nullptr;
+        }
+
+        if (cur_node->type != node_type_t::Variable) {
+            DebugPrint ("Incorrect foo params", tokens[pos].line);
             return nullptr;
         }
 
@@ -762,11 +767,6 @@ GetFooParams (int* params_count)
         *params_count += 1;
 
         tree_node_t* cur_var = cur_node;
-
-        if (cur_node->type != node_type_t::Variable) {
-            DebugPrint ("Incorrect foo params", tokens[pos].line);
-            return nullptr;
-        }
 
         AddVar (var_ctx, cur_node->node_data.variable, variable_type_t::var, 0);
 
@@ -786,14 +786,14 @@ GetFooParams (int* params_count)
             }
 
             if ((cur_var->right_node = tokens[pos].node)->type != node_type_t::Variable) {
-            if ( cur_var->right_node->type == node_type_t::Keyword  &&
-                 cur_var->right_node->node_data.keyword == keywords_t::close_bracket) {
-                MyFree (cur_var->right_node);                    
-            }
+                if ( cur_var->right_node->type == node_type_t::Keyword  &&
+                     cur_var->right_node->node_data.keyword == keywords_t::close_bracket) {
+                    MyFree (cur_var->right_node);                    
+                }
 
-            DebugPrint ("Incorrect function params", tokens[pos].line);
-            return nullptr;
-        }
+                DebugPrint ("Incorrect function params", tokens[pos].line);
+                return nullptr;
+            }
 
             pos += 1;
 
@@ -806,7 +806,7 @@ GetFooParams (int* params_count)
 
         if (node_2->type              != node_type_t::Keyword || 
             node_2->node_data.keyword != keywords_t ::close_bracket) {
-            DebugPrint ("No close bracket1", tokens[pos].line);
+            DebugPrint ("No close bracket in foo params", tokens[pos].line);
             return nullptr;
         }
 
@@ -859,7 +859,7 @@ GetFunction ()
 
         stack_push (&stk, (void*) v_ctx);
 
-        tree_node_t* foo_params = GetFooParams ( &params_count);
+        tree_node_t* foo_params = GetFooParams (&params_count);
 
         tree_node_t* name_and_params = NewNode (node_type_t::Connection, MakeDigitData (0), 
                                                 nullptr                , nullptr         );
@@ -867,6 +867,9 @@ GetFunction ()
         void* cur_vbl = nullptr;
 
         stack_pop (&stk, &cur_vbl);
+
+        v_ctx = (variable_ctx*) cur_vbl;
+
         stack_pop (&stk, &cur_vbl);
 
         variable_ctx* cur_variables = (variable_ctx*) cur_vbl;
@@ -1001,6 +1004,7 @@ GetG ()
     tree_node_t* cur_node = head;
 
     while (true) {
+
         if ((cur_node->right_node = GetAnnounce ())) {
             cur_node = cur_node->right_node;
         }
@@ -1040,9 +1044,7 @@ GetFooCall ()
         return nullptr;
     }
 
-    MyFree (next_node);
-
-    pos += 2;
+    pos += 1;
 
     int foo_params_count = 0;
 
@@ -1052,21 +1054,6 @@ GetFooCall ()
         DebugPrint ("Unknown function", tokens[pos].line);
         return nullptr;
     }
-
-    if (pos >= node_num) {
-        DebugPrint ("No close bracket", tokens[pos - 1].line);
-        return nullptr;
-    }
-
-    tree_node_t* last_node = tokens[pos].node;
-
-    if (last_node->type              != node_type_t::Keyword ||
-        last_node->node_data.keyword != keywords_t ::close_bracket) {
-        DebugPrint ("No close bracket", tokens[pos - 1].line);
-        return nullptr;
-    }
-
-    MyFree (last_node);
 
     cur_node->left_node = foo_params;
 
@@ -1105,14 +1092,16 @@ GetFooCallParams (int* params_count)
         tree_node_t* cur_var = cur_node;
 
         while (pos < node_num && tokens[pos].node->type == node_type_t::Keyword
-                  && tokens[pos].node->node_data.keyword == keywords_t ::comma  ) {
+                 && tokens[pos].node->node_data.keyword == keywords_t ::comma  ) {
             MyFree (tokens[pos].node);
             
             pos += 1;
 
-            CHECK_POS;
+            int cur_line = tokens[pos - 1].line;
 
-            int cur_line = tokens[pos].line;
+            if (pos >= node_num) {
+                DebugPrint ("Excess comma", cur_line);
+            }
 
             cur_var->right_node = GetAnd ();
 
@@ -1126,11 +1115,11 @@ GetFooCallParams (int* params_count)
             cur_var = cur_var->right_node;
         }
 
-        tree_node_t* node_2 = tokens->node;
+        tree_node_t* node_2 = tokens[pos].node;
 
         if (node_2->type              != node_type_t::Keyword || 
             node_2->node_data.keyword != keywords_t ::close_bracket) {
-            DebugPrint ("No close bracket", tokens[pos].line);
+            DebugPrint ("No close bracket in foo call params", tokens[pos].line);
             return nullptr;
         }
 
