@@ -59,6 +59,9 @@ AddVar (variable_ctx* var_ctx, variable_t var, variable_type_t type, int params_
 {
     CheckVarArr (var_ctx);
 
+    var.type             = type        ;
+    var.foo_params_count = params_count;
+
     var_ctx->variable_arr[var_ctx->count] = var;
 
     var_ctx->count++;

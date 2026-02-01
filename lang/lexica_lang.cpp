@@ -24,7 +24,6 @@ const int kNumOfKeywords = sizeof (kKeywords) / sizeof (*kKeywords);
 static language_err_t GetNum            (parser_ctx_t* parser_ctx);
 static language_err_t GetVar            (parser_ctx_t* parser_ctx);
 static language_err_t GetBasicWord      (parser_ctx_t* parser_ctx);
-static language_err_t UpsizeTokenBuffer (token_t**     tokens  , int* cur_tokens_cap);
 static int            CompareBasicword  (node_type_t   type    , parser_ctx_t* parser_ctx,
                                          const char**  word_arr, int word_arr_size  );
 static int            GetWordLen        (node_type_t   type    , int word_num       );
@@ -36,16 +35,19 @@ static int            GetBasicWordNum   (parser_ctx_t* parser_ctx, node_type_t* 
 int
 MakeNodeBuffer (const char* buffer, int size, token_t** tokens)
 {
-    *tokens = (token_t*) calloc (100, sizeof (token_t));
 
     parser_ctx_t parser_ctx = {};
 
-    parser_ctx.size   =  size;
-    parser_ctx.buffer =  buffer;
-    parser_ctx.tokens = *tokens;
+    InitParserCtx (&parser_ctx, buffer, size);
+
+    *tokens = parser_ctx.tokens;
     
     while (parser_ctx.pos < size) {
         int pos = parser_ctx.pos;
+
+        if (parser_ctx.node_num == parser_ctx.capacity) {
+            if (UpsizeTokenBuffer (&parser_ctx) == language_err_t::AlocationErr) return 0;
+        }
 
         language_err_t st = language_err_t::SyntaxErr;
 
@@ -190,8 +192,8 @@ GetVar (parser_ctx_t* parser_ctx)
 
     variable_t var = {};
 
-    var.name   = const_cast <char*> (buffer) + pos - i;
-    var.len = i;
+    var.name = const_cast <char*> (buffer) + pos - i;
+    var.len  = i;
 
     tree_data_t data = {};
 
@@ -259,28 +261,6 @@ LexicalDump (token_t* tokens, int count)
     }
 
     fclose (dump);
-}
-
-//--------------------------------------------------------------------------------
-
-static language_err_t
-UpsizeTokenBuffer (token_t** tokens, int* cur_tokens_cap)
-{
-    DEBUG_ASSERT (tokens != nullptr);
-
-    token_t* new_arr = (token_t*) realloc (*tokens, 
-                        *cur_tokens_cap * sizeof (token_t) * 2);
-
-    if (new_arr == nullptr) {
-        PRINTERR (language_err_t::AlocationErr);
-        return language_err_t::AlocationErr;
-    }
-
-    *tokens = new_arr;
-
-    *cur_tokens_cap *= 2;
-
-    return language_err_t::Success;
 }
 
 //--------------------------------------------------------------------------------

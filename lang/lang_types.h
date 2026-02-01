@@ -27,6 +27,7 @@ struct parser_ctx_t {
     int         pos;
     int         cur_line;
     int         node_num;
+    int         capacity;
     const char* buffer;
     token_t*    tokens;
 };

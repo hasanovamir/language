@@ -565,7 +565,6 @@ GetFigBracket ()
 
         if (node_2->type              != node_type_t::Keyword || 
             node_2->node_data.keyword != keywords_t ::fig_close_bracket) {
-            fprintf (stderr, "idx = %d type = %d data = %d", node_2->idx, node_2->type, node_2->node_data.keyword);
             DebugPrint ("No close figure bracket", tokens[pos].line);
             return nullptr;
         }
@@ -582,7 +581,7 @@ GetFigBracket ()
 
         return cur_node;
     }
-fprintf (stderr, "idx = %d type = %d",cur_node->idx, (int) cur_node->type);
+
     DebugPrint ("No figure bracket", tokens[pos].line);
 
     return nullptr;
@@ -663,11 +662,15 @@ GetStatement ()
             cur_node = con;
         }
         else {
-            return head;
+            break;
         }
     }
 
-    return head;
+    cur_node = head->right_node;
+
+    MyFree (head);
+
+    return cur_node;
 }
 
 //--------------------------------------------------------------------------------
@@ -853,11 +856,11 @@ GetFunction ()
 
         variable_ctx* v_ctx = nullptr;
 
-        if (VarArrCtor (&v_ctx) == language_err_t::AlocationErr) {
+        if (VarArrCtor (&v_ctx) == language_err_t::AlocationErr) { //array to foo params
             return nullptr;
         }
 
-        stack_push (&stk, (void*) v_ctx);
+        stack_push (&stk, (void*) v_ctx); // push it to use in GetFooParams
 
         tree_node_t* foo_params = GetFooParams (&params_count);
 
@@ -868,11 +871,11 @@ GetFunction ()
 
         stack_pop (&stk, &cur_vbl);
 
-        v_ctx = (variable_ctx*) cur_vbl;
+        v_ctx = (variable_ctx*) cur_vbl; // foo params
 
         stack_pop (&stk, &cur_vbl);
 
-        variable_ctx* cur_variables = (variable_ctx*) cur_vbl;
+        variable_ctx* cur_variables = (variable_ctx*) cur_vbl; // global variables + foo
         
         AddVar (cur_variables, foo_name->node_data.variable, 
                 variable_type_t::foo, params_count);
@@ -921,14 +924,13 @@ CheckForVar (variable_t var, variable_type_t type, int params_count)
     variable_ctx* var_ctx = (variable_ctx*) v_arr;
 
     for (int i = 0; i < var_ctx->count; i++) {
-        int         cur_len = var_ctx->variable_arr[i].len ;
-        const char* cur_var = var_ctx->variable_arr[i].name;
-
+        int        cur_len = var_ctx->variable_arr[i].len ;
+        variable_t cur_var = var_ctx->variable_arr[i];
         cur_len = (cur_len > var_len) ? var_len : cur_len;
 
-        if (strncmp (var.name, cur_var, cur_len) == 0 && 
-            var.type == var_ctx->variable_arr[i].type &&
-            var.foo_params_count == params_count) {
+        if (strncmp (var.name, cur_var.name, cur_len) == 0 && 
+            type         == cur_var.type &&
+            params_count == cur_var.foo_params_count) {
             stack_push (&stk, v_arr);
             return true;
         }
@@ -992,11 +994,11 @@ GetG ()
 
     CHECK_POS;
 
-    variable_t* var_arr = (variable_t*) calloc (20, sizeof (variable_t));
+    variable_ctx* var_ctx = nullptr;
 
-    variable_ctx var_ctx = {.variable_arr = var_arr};
+    VarArrCtor (&var_ctx);
 
-    stack_push (&stk, (void*) (&var_ctx));
+    stack_push (&stk, (void*) var_ctx);
 
     tree_node_t* head = NewNode (node_type_t::Connection, MakeDigitData (0), 
                                  nullptr                , nullptr         );
@@ -1017,13 +1019,17 @@ GetG ()
             cur_node = con;
         }
         else {
-            return head;
+            break;
         }
     }
 
-    free (var_arr);
+    cur_node = head->right_node;
 
-    return head;
+    MyFree (head);
+
+    VarArrDtor (var_ctx);
+
+    return cur_node;
 }
 
 //--------------------------------------------------------------------------------
