@@ -74,7 +74,7 @@ GetP ()
     keywords_t   keyword = cur_node->node_data.keyword;
 
     if (type    == node_type_t::Keyword && 
-        keyword == keywords_t ::open_bracket) {
+        keyword == keywords_t::open_bracket) {
 
         MyFree (cur_node);
 
@@ -681,7 +681,7 @@ GetAnnounce ()
     DEBUG_ASSERT (tokens != nullptr);
 
     CHECK_POS;
- 
+
     int          cur_line = tokens[pos].line;
     tree_node_t* cur_node = tokens[pos].node;
 

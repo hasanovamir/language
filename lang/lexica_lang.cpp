@@ -2,25 +2,6 @@
 
 //--------------------------------------------------------------------------------
 
-const char* kKeywords[] = 
-{
-    "if"      ,
-    "else"    ,
-    "while"   ,
-    ";"       ,
-    ","       ,
-    "("       ,
-    ")"       ,
-    "{"       ,
-    "}"       ,
-    "announce",
-    "def"     ,
-};
-
-const int kNumOfKeywords = sizeof (kKeywords) / sizeof (*kKeywords);
-
-//--------------------------------------------------------------------------------
-
 static language_err_t GetNum            (parser_ctx_t* parser_ctx);
 static language_err_t GetVar            (parser_ctx_t* parser_ctx);
 static language_err_t GetBasicWord      (parser_ctx_t* parser_ctx);
@@ -35,7 +16,6 @@ static int            GetBasicWordNum   (parser_ctx_t* parser_ctx, node_type_t* 
 int
 MakeNodeBuffer (const char* buffer, int size, token_t** tokens)
 {
-
     parser_ctx_t parser_ctx = {};
 
     InitParserCtx (&parser_ctx, buffer, size);
@@ -342,7 +322,7 @@ GetBasicWordNum (parser_ctx_t* parser_ctx, node_type_t* type)
     *type = node_type_t::Keyword;
 
     int word_num = CompareBasicword (node_type_t::Keyword, parser_ctx, 
-                                    kKeywords, kNumOfKeywords);
+                                    kKeywords, kNumOfKeyWords);
 
     int word_len = GetWordLen       (node_type_t::Keyword, word_num);
     if (word_num == -1) {

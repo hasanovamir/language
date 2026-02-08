@@ -5,47 +5,6 @@
 my_alloc_context_t my_alloc_context = {};
 tree_context_t tree_context = {0, 0, nullptr, &my_alloc_context};
 
-//-----------------------------------------------------------------------------
-
-const char* kMathFunctions[] = {
-    "sqrt"  ,
-    "log"   ,
-    "sin"   ,
-    "cos"   ,
-    "tg"    ,
-    "ctg"   ,
-    "arcsin",
-    "arccos",
-    "arctg" ,
-    "arcctg",
-    "sh"    ,
-    "ch"    ,
-};
-
-//--------------------------------------------------------------------------------
-
-const char* kMathOperations[] = {
-    "+" ,
-    "-" ,
-    "*" ,
-    "/" ,
-    "^" ,
-    "=" ,
-    "==",
-    "!=",
-    ">" ,
-    ">=",
-    "<" ,
-    "<=",
-    "and",
-    "or"
-};
-
-//--------------------------------------------------------------------------------
-
-const int kNumOfMathOper = sizeof (kMathOperations) / sizeof (* kMathOperations);
-const int kNumOfMathFunc = sizeof (kMathFunctions ) / sizeof (* kMathFunctions );
-
 //--------------------------------------------------------------------------------
 
 tree_err_t 
