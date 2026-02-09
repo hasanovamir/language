@@ -12,8 +12,6 @@
 const int StartVarCap = 10;
 
 //————————————————————————————POSHEL_NAHUI————————————————————————————————————————————————————
-tree_node_t* 
-NewNode (node_type_t type, tree_data_t data, tree_node_t* left, tree_node_t* right);
 
 void         ClearDump                  (void);
 void         OptimizeTree               (tree_node_t* node);
@@ -37,11 +35,13 @@ tree_data_t  MakeKeywordData            (keywords_t  oper     );
 tree_data_t  MakeMathOperData           (math_oper_t oper     );
 tree_err_t   LangInit                   (const char* file_name);
 tree_data_t  MakeMathFuncData           (math_func_t foo);
-tree_node_t* ReadTree                   (const token_t* tokens, int node_num);
+tree_node_t* MakeTree                   (const token_t* tokens, int node_num);
 language_err_t
 InitParserCtx (parser_ctx_t* parser, const char* buffer, int size);
 language_err_t
 UpsizeTokenBuffer (parser_ctx_t* parser);
+language_err_t
+SaveASTtoFile (const char* file_name, const tree_node_t* head);
 
 //————————————————————————————————————————————————————————————————————————————————
 

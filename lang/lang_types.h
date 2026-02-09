@@ -40,6 +40,7 @@ enum class language_err_t {
     AnotherNodeType = 2,
     AlocationErr    = 3,
     FopenErr        = 4,
+    UnknownDataType = 5,
 };
 
 //————————————————————————————————————————————————————————————————————————————————

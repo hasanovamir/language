@@ -16,9 +16,15 @@ main ()
 
     if ((node_num = MakeNodeBuffer (buffer, size, &tokens)) == -1) return 1;
     
-    tree_node_t* node = ReadTree (tokens, node_num);
+    tree_node_t* node = MakeTree (tokens, node_num);
+
+    if (node == nullptr) return 1;
     
     TreeDump (node);
+
+    SaveASTtoFile ("pisun.txt", node);
+
+    TreeDestroy ();
 
     return 0;
 }

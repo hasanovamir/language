@@ -12,17 +12,11 @@
 void        DotDumpTitle        (FILE* dot_file);
 void        DotDumpNode         (FILE* dot_file, tree_node_t* node);
 void        DotDumpEdge         (FILE* dot_file, tree_node_t* node);
-void        TexNodeWithPriority (FILE* tex_file, tree_node_t* node , 
-                                               int parent_priority);
 tree_err_t  TreeDump            (tree_node_t* tree_node);
-tree_err_t  TexDump             (tree_node_t* node, const char* file_name);
 tree_err_t  FillDotFile         (tree_node_t* tree_node , const char* file_name);
 tree_err_t  TreeFillHtml        (const char* file_name );
 tree_err_t  TreeStartFillHtml   (void);
 tree_err_t  TreeEndFillHtml     (void);
-double      RetTreeValue        (tree_node_t* node, double arg_val);
-void
-DrawTree (tree_node_t* tree, double x_min, double x_max, const char* pdf_name);
 
 //————————————————————————————————————————————————————————————————————————————————
 

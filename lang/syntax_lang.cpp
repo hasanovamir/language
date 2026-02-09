@@ -13,12 +13,12 @@ static language_err_t VarArrCtor  (variable_ctx** var_ctx);
 static void           VarArrDtor  (variable_ctx*  var_ctx);
 static bool           CheckForVar (variable_t var, variable_type_t type, int params_count);
 
-static tree_node_t* GetP             ();
+static tree_node_t* GetBracket             ();
 static tree_node_t* GetMul           ();
 static tree_node_t* GetAdd           ();
-static tree_node_t* GetN             ();
-static tree_node_t* GetG             ();
-static tree_node_t* GetV             ();
+static tree_node_t* GetNum           ();
+static tree_node_t* GetGeneral       ();
+static tree_node_t* GetVar           ();
 static tree_node_t* GetExp           ();
 static tree_node_t* GetEqual         ();
 static tree_node_t* GetAss           ();
@@ -40,7 +40,7 @@ static stack_t stk = {};
 //--------------------------------------------------------------------------------
 
 tree_node_t*
-ReadTree (const token_t* tkn, int node_n)
+MakeTree (const token_t* tkn, int node_n)
 {
     DEBUG_ASSERT (tkn != nullptr);
 
@@ -52,7 +52,7 @@ ReadTree (const token_t* tkn, int node_n)
 
     stack_init (&stk, 10);
 
-    tree_node_t* tree = GetG ();
+    tree_node_t* tree = GetGeneral ();
 
     stack_destroy (&stk);
     
@@ -62,7 +62,7 @@ ReadTree (const token_t* tkn, int node_n)
 //--------------------------------------------------------------------------------
 
 static tree_node_t*
-GetP ()
+GetBracket ()
 {
     DEBUG_ASSERT (tokens != nullptr);
 
@@ -74,7 +74,7 @@ GetP ()
     keywords_t   keyword = cur_node->node_data.keyword;
 
     if (type    == node_type_t::Keyword && 
-        keyword == keywords_t::open_bracket) {
+        keyword == keywords_t::open_bracket_kw) {
 
         MyFree (cur_node);
 
@@ -96,7 +96,7 @@ GetP ()
         type     = cur_node->type;
         keyword  = cur_node->node_data.keyword;
 
-        if (type != node_type_t::Keyword || keyword != keywords_t::close_bracket) {
+        if (type != node_type_t::Keyword || keyword != keywords_t::close_bracket_kw) {
             DebugPrint ("No close bracket", tokens[pos - 1].line);
             
             return nullptr;
@@ -109,10 +109,10 @@ GetP ()
         return node;
     }
     else if (type == node_type_t::Constant) {
-        return GetN ();
+        return GetNum ();
     }
     else if (type == node_type_t::Variable) {
-        return GetV ();
+        return GetVar ();
     }
 
     return nullptr;
@@ -234,7 +234,7 @@ GetAdd ()
 //--------------------------------------------------------------------------------
 
 static tree_node_t*
-GetN ()
+GetNum ()
 {
     DEBUG_ASSERT (tokens != nullptr);
 
@@ -254,7 +254,7 @@ GetN ()
 //--------------------------------------------------------------------------------
 
 static tree_node_t*
-GetV ()
+GetVar ()
 {
     DEBUG_ASSERT (tokens != nullptr);
 
@@ -283,7 +283,7 @@ GetExp ()
 {
     DEBUG_ASSERT (tokens != nullptr);
 
-    tree_node_t* node_1 = GetP ();
+    tree_node_t* node_1 = GetBracket ();
 
     if (pos == node_num - 1) {
         return node_1;
@@ -303,7 +303,7 @@ GetExp ()
             return nullptr;
         }
 
-        tree_node_t* node_2 = GetP ();
+        tree_node_t* node_2 = GetBracket ();
 
         if (node_2 == nullptr) {
             DebugPrint ("too few arguments to math operator6", tokens[pos].line);
@@ -386,7 +386,7 @@ static tree_node_t* GetAss ()
         return nullptr;
     }
 
-    tree_node_t* node_1 = GetV ();
+    tree_node_t* node_1 = GetVar ();
 
     if (node_1 == nullptr) {
         return nullptr;
@@ -417,7 +417,7 @@ static tree_node_t* GetAss ()
         tree_node_t* node_3 = tokens[pos].node;
 
         if (node_3->type              != node_type_t::Keyword || 
-            node_3->node_data.keyword != keywords_t ::semicolon ) {
+            node_3->node_data.keyword != keywords_t::semicolon_kw ) {
             DebugPrint ("forgotten semicolon", tokens[pos].line);
             return nullptr;
         }
@@ -504,7 +504,7 @@ GetIfWhile ()
              cur_node->node_data.keyword == keywords_t::while_kw)) {
         pos += 1;
 
-        tree_node_t* node_1 = GetP ();
+        tree_node_t* node_1 = GetBracket ();
 
         if (node_1 == nullptr || pos >= node_num) return nullptr;
 
@@ -541,7 +541,7 @@ GetFigBracket ()
     tree_node_t* cur_node = tokens[pos].node;
 
     if (cur_node->type              == node_type_t::Keyword &&
-        cur_node->node_data.keyword == keywords_t ::fig_open_bracket) {
+        cur_node->node_data.keyword == keywords_t::fig_open_bracket_kw) {
         pos += 1;
 
         MyFree (cur_node);
@@ -564,7 +564,7 @@ GetFigBracket ()
         tree_node_t* node_2 = tokens[pos].node;
 
         if (node_2->type              != node_type_t::Keyword || 
-            node_2->node_data.keyword != keywords_t ::fig_close_bracket) {
+            node_2->node_data.keyword != keywords_t::fig_close_bracket_kw) {
             DebugPrint ("No close figure bracket", tokens[pos].line);
             return nullptr;
         }
@@ -600,7 +600,7 @@ GetElse ()
     tree_node_t* cur_node = tokens[pos].node;
 
     if (cur_node->type              == node_type_t::Keyword &&
-        cur_node->node_data.keyword == keywords_t ::else_kw   ) {
+        cur_node->node_data.keyword == keywords_t::else_kw   ) {
         pos += 1;
 
         tree_node_t* node_1 = GetFigBracket ();
@@ -686,7 +686,7 @@ GetAnnounce ()
     tree_node_t* cur_node = tokens[pos].node;
 
     if (cur_node->type              == node_type_t::Keyword &&
-        cur_node->node_data.keyword == keywords_t ::announce ) {
+        cur_node->node_data.keyword == keywords_t::announce_kw ) {
         pos += 1;
 
         if (pos >= node_num || tokens[pos].node->type != node_type_t::Variable) {
@@ -710,7 +710,7 @@ GetAnnounce ()
         tree_node_t* left = cur_node->left_node;
 
         if (left->             type != node_type_t::Keyword || 
-            left->node_data.keyword != keywords_t ::semicolon) {
+            left->node_data.keyword != keywords_t::semicolon_kw) {
             DebugPrint ("Initialization is required when declaring a variable", cur_line);
             return nullptr;
         }
@@ -734,7 +734,7 @@ GetFooParams (int* params_count)
     tree_node_t* cur_node = tokens[pos].node;
 
     if (cur_node->type              == node_type_t::Keyword &&
-        cur_node->node_data.keyword == keywords_t ::open_bracket) {
+        cur_node->node_data.keyword == keywords_t::open_bracket_kw) {
         pos += 1;
 
         MyFree (cur_node);
@@ -747,7 +747,7 @@ GetFooParams (int* params_count)
         cur_node = tokens[pos].node;
 
         if (cur_node->type              == node_type_t::Keyword &&
-            cur_node->node_data.keyword == keywords_t ::close_bracket) {
+            cur_node->node_data.keyword == keywords_t::close_bracket_kw) {
 
             MyFree (cur_node);
 
@@ -776,7 +776,7 @@ GetFooParams (int* params_count)
         pos += 1;
 
         while (pos < node_num && tokens[pos].node->type == node_type_t::Keyword
-                  && tokens[pos].node->node_data.keyword == keywords_t ::comma  ) {
+                  && tokens[pos].node->node_data.keyword == keywords_t::comma_kw  ) {
             MyFree (tokens[pos].node);
             
             pos          += 1;
@@ -790,7 +790,7 @@ GetFooParams (int* params_count)
 
             if ((cur_var->right_node = tokens[pos].node)->type != node_type_t::Variable) {
                 if ( cur_var->right_node->type == node_type_t::Keyword  &&
-                     cur_var->right_node->node_data.keyword == keywords_t::close_bracket) {
+                     cur_var->right_node->node_data.keyword == keywords_t::close_bracket_kw) {
                     MyFree (cur_var->right_node);                    
                 }
 
@@ -808,7 +808,7 @@ GetFooParams (int* params_count)
         tree_node_t* node_2 = tokens[pos].node;
 
         if (node_2->type              != node_type_t::Keyword || 
-            node_2->node_data.keyword != keywords_t ::close_bracket) {
+            node_2->node_data.keyword != keywords_t::close_bracket_kw) {
             DebugPrint ("No close bracket in foo params", tokens[pos].line);
             return nullptr;
         }
@@ -838,7 +838,7 @@ GetFunction ()
     tree_node_t* cur_node = tokens[pos].node;
 
     if (cur_node->type == node_type_t::Keyword &&
-        cur_node->node_data.keyword == keywords_t::def) {
+        cur_node->node_data.keyword == keywords_t::def_kw) {
         pos += 1;
         
         if (pos >= node_num ||
@@ -988,7 +988,7 @@ VarArrDtor (variable_ctx* var_ctx)
 //--------------------------------------------------------------------------------
 
 static tree_node_t*
-GetG ()
+GetGeneral ()
 {
     DEBUG_ASSERT (tokens != nullptr);
 
@@ -1046,7 +1046,7 @@ GetFooCall ()
 
     if (cur_node ->type != node_type_t::Variable ||
         next_node->type != node_type_t::Keyword  ||
-        next_node->node_data.keyword != keywords_t::open_bracket) {
+        next_node->node_data.keyword != keywords_t::open_bracket_kw) {
         return nullptr;
     }
 
@@ -1079,7 +1079,7 @@ GetFooCallParams (int* params_count)
     tree_node_t* cur_node = tokens[pos].node;
 
     if (cur_node->type              == node_type_t::Keyword &&
-        cur_node->node_data.keyword == keywords_t::open_bracket) {
+        cur_node->node_data.keyword == keywords_t::open_bracket_kw) {
         pos += 1;
 
         MyFree (cur_node);
@@ -1098,7 +1098,7 @@ GetFooCallParams (int* params_count)
         tree_node_t* cur_var = cur_node;
 
         while (pos < node_num && tokens[pos].node->type == node_type_t::Keyword
-                 && tokens[pos].node->node_data.keyword == keywords_t ::comma  ) {
+                 && tokens[pos].node->node_data.keyword == keywords_t::comma_kw  ) {
             MyFree (tokens[pos].node);
             
             pos += 1;
@@ -1124,7 +1124,7 @@ GetFooCallParams (int* params_count)
         tree_node_t* node_2 = tokens[pos].node;
 
         if (node_2->type              != node_type_t::Keyword || 
-            node_2->node_data.keyword != keywords_t ::close_bracket) {
+            node_2->node_data.keyword != keywords_t::close_bracket_kw) {
             DebugPrint ("No close bracket in foo call params", tokens[pos].line);
             return nullptr;
         }

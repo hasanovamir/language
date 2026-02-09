@@ -1,5 +1,4 @@
-#include "lang.h"
-#include "general_io_file_func.h"
+#include "tree.h"
 
 //--------------------------------------------------------------------------------
 
@@ -63,9 +62,15 @@ SkipSpace (const char* buffer, int* pos, int* cur_line)
 {
     DEBUG_ASSERT (buffer != nullptr);
 
-    while (buffer[*pos] == ' ' || buffer[*pos] == '\r' || buffer[*pos] == '\n') {
-        if (buffer[*pos] == '\n') *cur_line += 1;
+    char c = buffer[*pos]; 
+
+    while (c == ' ' || c == '\r' || c == '\n' || c == '\t') {
+        if (c == '\n') *cur_line += 1;
+
         (*pos)++;
+
+        c = buffer[*pos];
+        fprintf (stderr, "pos = %d\n", *pos);
     }
 }
 

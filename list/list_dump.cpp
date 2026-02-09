@@ -83,7 +83,7 @@ void MakeDumpNode (FILE* dot_file, int node_number, int idx, list_data_t data, i
         fprintf(dot_file, "\tnode%d [label=\"<idx> idx:%d | <data> data:PSN | <next> next:%d\", style=filled, color=%s];\n", 
             node_number, idx, next, color);
     else
-            fprintf(dot_file, "\tnode%d [label=\"<idx> idx:%d | <data> data:%lf | <next> next:%d\", style=filled, color=%s];\n", 
+            fprintf(dot_file, "\tnode%d [label=\"<idx> idx:%d | <data> data:%d | <next> next:%d\", style=filled, color=%s];\n", 
             node_number, idx, data.node_data.immediate, next, color);
 }
 

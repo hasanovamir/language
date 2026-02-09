@@ -1,4 +1,4 @@
-#include "lang.h"
+#include "common_dump.h"
 
 //--------------------------------------------------------------------------------
 
@@ -59,7 +59,7 @@ DotDumpNode (FILE* dot_file, tree_node_t* node)
 
     switch (node->type) {
         case node_type_t::Constant :
-            fprintf (dot_file, "NUM | VAL = %lg |", node->node_data.immediate);
+            fprintf (dot_file, "NUM | VAL = %d |", node->node_data.immediate);
             break;
         case node_type_t::Connection :
             fprintf (dot_file, "CON | VAL = NewOp |");

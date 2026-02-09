@@ -229,7 +229,7 @@ LexicalDump (token_t* tokens, int count)
                 fprintf (dump, "custom func | data = %s)\n", 
                     cur_node->node_data.variable.name);
             case node_type_t::Constant :
-                fprintf (dump, "  Constant  | data = %lg)\n", cur_node->node_data.immediate);
+                fprintf (dump, "  Constant  | data = %d)\n", cur_node->node_data.immediate);
                 break;
             case node_type_t::Variable :
                 fprintf (dump, "  variable  | data = \"%.*s\")\n", 

@@ -11,6 +11,7 @@
 #include <math.h>
 #include "tree_types.h"
 #include "list.h"
+#include "general_io_file_func.h"
 
 
 //————————————————————————————————————————————————————————————————————————————————
@@ -61,6 +62,8 @@ TreeReadDataBase (const char* FileName, char** buffer);
 tree_err_t   MakeNode            (tree_node_t** Node    );
 tree_err_t   ReadBuffer          (char* buffer, const char* FileName, int size);
 tree_err_t   TreeInsert          (tree_data_t val, tree_node_t* ParentNode, tree_data_t cond);
+tree_node_t* 
+NewNode (node_type_t type, tree_data_t data, tree_node_t* left, tree_node_t* right);
 
 //————————————————————————————————————————————————————————————————————————————————
 

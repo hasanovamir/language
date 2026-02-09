@@ -63,17 +63,17 @@ enum class math_func_t {
 
 enum class keywords_t 
 {
-    if_kw             = 0,
-    else_kw           = 1,
-    while_kw          = 2,
-    semicolon         = 3,
-    comma             = 4,
-    open_bracket      = 5,
-    close_bracket     = 6,
-    fig_open_bracket  = 7,
-    fig_close_bracket = 8,
-    announce          = 9,
-    def               = 10,
+    if_kw                = 0,
+    else_kw              = 1,
+    while_kw             = 2,
+    semicolon_kw         = 3,
+    comma_kw             = 4,
+    open_bracket_kw      = 5,
+    close_bracket_kw     = 6,
+    fig_open_bracket_kw  = 7,
+    fig_close_bracket_kw = 8,
+    announce_kw          = 9,
+    def_kw               = 10,
 };
 
 //————————————————————————————————————————————————————————————————————————————————
@@ -100,7 +100,7 @@ struct variable_t {
 //————————————————————————————————————————————————————————————————————————————————
 
 typedef union {
-    double      immediate;
+    int         immediate;
     variable_t  variable ;
     math_oper_t math_oper;
     math_func_t math_func;
