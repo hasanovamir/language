@@ -122,27 +122,27 @@ GetNode (const char* buffer, int size, int* pos)
 
 //     while (pos < size) {
 //         if (parser_ctx.node_num == parser_ctx.capacity) {
-//             if (UpsizeTokenBuffer (&parser_ctx) == language_err_t::AlocationErr) return 0;
+//             if (UpsizeTokenBuffer (&parser_ctx) == frontend_err_t::AlocationErr) return 0;
 //         }
 
-//         language_err_t st = language_err_t::SyntaxErr;
+//         frontend_err_t st = frontend_err_t::SyntaxErr;
 
 //         if (isdigit (buffer[pos])) {
             
 //             st = GetNum (&parser_ctx);
 
-//             if (st == language_err_t::Success     ) continue;
-//             if (st == language_err_t::AlocationErr) return -1;
+//             if (st == frontend_err_t::Success     ) continue;
+//             if (st == frontend_err_t::AlocationErr) return -1;
 //         }
 
-//         if ((st = GetBasicWord (&parser_ctx)) != language_err_t::AnotherNodeType) {
-//             if (st == language_err_t::Success     ) continue;
-//             if (st == language_err_t::AlocationErr) return -1;    
+//         if ((st = GetBasicWord (&parser_ctx)) != frontend_err_t::AnotherNodeType) {
+//             if (st == frontend_err_t::Success     ) continue;
+//             if (st == frontend_err_t::AlocationErr) return -1;    
 //         }
 
-//         if ((st = GetVar (&parser_ctx)) != language_err_t::AnotherNodeType) {
-//             if (st == language_err_t::Success     ) continue;
-//             if (st == language_err_t::AlocationErr) return -1;    
+//         if ((st = GetVar (&parser_ctx)) != frontend_err_t::AnotherNodeType) {
+//             if (st == frontend_err_t::Success     ) continue;
+//             if (st == frontend_err_t::AlocationErr) return -1;    
 //         }
 //     }
 

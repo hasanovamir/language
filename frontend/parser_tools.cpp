@@ -1,8 +1,8 @@
-#include "lang.h"
+#include "frontend.h"
 
 //--------------------------------------------------------------------------------
 
-static language_err_t CheckVarArr (variable_ctx* var_ctx);
+static frontend_err_t CheckVarArr (variable_ctx* var_ctx);
 
 //--------------------------------------------------------------------------------
 
@@ -124,7 +124,7 @@ DebugPrint (const char* str ,int line)
 
 //--------------------------------------------------------------------------------
 
-static language_err_t
+static frontend_err_t
 CheckVarArr (variable_ctx* var_ctx)
 {
     variable_t* var_arr = var_ctx->variable_arr;
@@ -135,15 +135,15 @@ CheckVarArr (variable_ctx* var_ctx)
         variable_t* tmp = (variable_t*) realloc (var_arr, var_cap * 2);
 
         if (tmp == nullptr) {
-            PRINTERR (language_err_t::AlocationErr);
-            return language_err_t::AlocationErr;
+            PRINTERR (frontend_err_t::AlocationErr);
+            return frontend_err_t::AlocationErr;
         }
 
         var_ctx->variable_arr = tmp;
         var_ctx->capacity = var_cap * 2;
     }
 
-    return language_err_t::Success;
+    return frontend_err_t::Success;
 }
 
 //--------------------------------------------------------------------------------

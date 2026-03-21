@@ -60,30 +60,42 @@ DotDumpNode (FILE* dot_file, tree_node_t* node)
     switch (node->type) {
         case node_type_t::Constant :
             fprintf (dot_file, "NUM | VAL = %d |", node->node_data.immediate);
+            SET_NODE_PARAMS;
+            SET_NODE_COLOUR ("red");
             break;
         case node_type_t::Connection :
             fprintf (dot_file, "CON | VAL = NewOp |");
+            SET_NODE_PARAMS;
+            SET_NODE_COLOUR ("white");
             break;
         case node_type_t::Keyword :
             fprintf (dot_file, "KeyWord | VAL = \\%s |", kKeywords[(int)node->node_data.keyword]);
+            SET_NODE_PARAMS;
+            SET_NODE_COLOUR ("lime");
             break;
         case node_type_t::MathFunc :
             fprintf (dot_file, "MATH_FUNC | VAL = %s  |", kMathFunctions[(int)node->node_data.math_func]);
+            SET_NODE_PARAMS;
+            SET_NODE_COLOUR ("magenta");
             break;
         case node_type_t::MathOper :
             fprintf (dot_file, "MATH_OPER | VAL = \\%s |", kMathOperations[(int)node->node_data.math_oper]);
+            SET_NODE_PARAMS;
+            SET_NODE_COLOUR ("aqua");
             break;
         case node_type_t::Variable :
             fprintf (dot_file, "VAR | VAL = %.*s  |", node->node_data.variable.len, node->node_data.variable.name);
+            SET_NODE_PARAMS;
+            SET_NODE_COLOUR ("yellow");
             break;
         default :
             PRINTERR (Unknown data type);
             fprintf (stderr, "node type = %d\n", (int) node->type);
             return ;
     }
-
-    fprintf (dot_file, " <ptr> ptr:%p | {<left_node> left_node=%p | <right_node> right_node=%p } }\", color=black, style=filled, fillcolor=lime];\n", 
-        node, node->left_node, node->right_node);
+//fillcolor=lime];\n
+    // fprintf (dot_file, " <ptr> ptr:%p | {<left_node> left_node=%p | <right_node> right_node=%p } }\", color=black, style=filled, fillcolor=lime];\n", 
+    //     node, node->left_node, node->right_node);
 
     if (node->left_node)
         DotDumpNode (dot_file, node->left_node);

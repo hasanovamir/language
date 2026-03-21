@@ -1,13 +1,13 @@
-#include "lang.h"
+#include "frontend.h"
 
 //--------------------------------------------------------------------------------
 
-static language_err_t PrintASTNodetoFile (FILE* file, const tree_node_t* node, int deep     );
-static language_err_t PrintASTNodeByType (FILE* file, const tree_node_t* node, int tab_count);
+static frontend_err_t PrintASTNodetoFile (FILE* file, const tree_node_t* node, int deep     );
+static frontend_err_t PrintASTNodeByType (FILE* file, const tree_node_t* node, int tab_count);
 
 //--------------------------------------------------------------------------------
 
-language_err_t
+frontend_err_t
 SaveASTtoFile (const char* file_name, const tree_node_t* head)
 {
     DEBUG_ASSERT (head != nullptr);
@@ -16,22 +16,22 @@ SaveASTtoFile (const char* file_name, const tree_node_t* head)
 
     if (AST == nullptr) {
         fprintf (stderr, "FopenErr. Can not open file for AST\n");
-        return language_err_t::FopenErr;
+        return frontend_err_t::FopenErr;
     }
 
-    if (PrintASTNodetoFile (AST, head, 0) != language_err_t::Success) {
+    if (PrintASTNodetoFile (AST, head, 0) != frontend_err_t::Success) {
         fclose (AST);
-        return language_err_t::UnknownDataType;
+        return frontend_err_t::UnknownDataType;
     }
 
     fclose (AST);
 
-    return language_err_t::Success;
+    return frontend_err_t::Success;
 }
 
 //--------------------------------------------------------------------------------
 
-static language_err_t
+static frontend_err_t
 PrintASTNodetoFile (FILE* file, const tree_node_t* node, int deep)
 {
     DEBUG_ASSERT (file != nullptr);
@@ -39,7 +39,7 @@ PrintASTNodetoFile (FILE* file, const tree_node_t* node, int deep)
 
     if (node->left_node) {
         for (int i = 0; i < deep; i++) {
-        fprintf (file, "\t");
+            fprintf (file, "\t");
         }
 
         fprintf (file, "{\n");
@@ -47,14 +47,14 @@ PrintASTNodetoFile (FILE* file, const tree_node_t* node, int deep)
         PrintASTNodetoFile (file, node->left_node, deep + 1);
 
         for (int i = 0; i < deep; i++) {
-        fprintf (file, "\t");
+            fprintf (file, "\t");
         }
 
         fprintf (file, "}\n");
     }
 
-    if (PrintASTNodeByType (file, node, deep) != language_err_t::Success) {
-        return language_err_t::UnknownDataType;
+    if (PrintASTNodeByType (file, node, deep) != frontend_err_t::Success) {
+        return frontend_err_t::UnknownDataType;
     }
 
     if (node->right_node) {
@@ -73,12 +73,12 @@ PrintASTNodetoFile (FILE* file, const tree_node_t* node, int deep)
         fprintf (file, "}\n");
     }
 
-    return language_err_t::Success;
+    return frontend_err_t::Success;
 }
 
 //--------------------------------------------------------------------------------
 
-static language_err_t
+static frontend_err_t
 PrintASTNodeByType (FILE* file, const tree_node_t* node, int tab_count)
 {
     DEBUG_ASSERT (file != nullptr);
@@ -106,10 +106,10 @@ PrintASTNodeByType (FILE* file, const tree_node_t* node, int tab_count)
             break;
         default :
             fprintf (stderr, "Unknown data type\n");
-            return language_err_t::UnknownDataType;
+            return frontend_err_t::UnknownDataType;
     }
 
-    return language_err_t::Success;
+    return frontend_err_t::Success;
 }
 
 //--------------------------------------------------------------------------------

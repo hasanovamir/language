@@ -34,7 +34,7 @@ struct parser_ctx_t {
 
 //————————————————————————————————————————————————————————————————————————————————
 
-enum class language_err_t {
+enum class frontend_err_t {
     Success         = 0,
     SyntaxErr       = 1,
     AnotherNodeType = 2,

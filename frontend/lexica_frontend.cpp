@@ -1,10 +1,10 @@
-#include "lang.h"
+#include "frontend.h"
 
 //--------------------------------------------------------------------------------
 
-static language_err_t GetNum            (parser_ctx_t* parser_ctx);
-static language_err_t GetVar            (parser_ctx_t* parser_ctx);
-static language_err_t GetBasicWord      (parser_ctx_t* parser_ctx);
+static frontend_err_t GetNum            (parser_ctx_t* parser_ctx);
+static frontend_err_t GetVar            (parser_ctx_t* parser_ctx);
+static frontend_err_t GetBasicWord      (parser_ctx_t* parser_ctx);
 static int            CompareBasicword  (node_type_t   type    , parser_ctx_t* parser_ctx,
                                          const char**  word_arr, int word_arr_size  );
 static int            GetWordLen        (node_type_t   type    , int word_num       );
@@ -26,27 +26,27 @@ MakeNodeBuffer (const char* buffer, int size, token_t** tokens)
         int pos = parser_ctx.pos;
 
         if (parser_ctx.node_num == parser_ctx.capacity) {
-            if (UpsizeTokenBuffer (&parser_ctx) == language_err_t::AlocationErr) return 0;
+            if (UpsizeTokenBuffer (&parser_ctx) == frontend_err_t::AlocationErr) return 0;
         }
 
-        language_err_t st = language_err_t::SyntaxErr;
+        frontend_err_t st = frontend_err_t::SyntaxErr;
 
         if (isdigit (buffer[pos])) {
             
             st = GetNum (&parser_ctx);
 
-            if (st == language_err_t::Success     ) continue;
-            if (st == language_err_t::AlocationErr) return -1;
+            if (st == frontend_err_t::Success     ) continue;
+            if (st == frontend_err_t::AlocationErr) return -1;
         }
 
-        if ((st = GetBasicWord (&parser_ctx)) != language_err_t::AnotherNodeType) {
-            if (st == language_err_t::Success     ) continue;
-            if (st == language_err_t::AlocationErr) return -1;    
+        if ((st = GetBasicWord (&parser_ctx)) != frontend_err_t::AnotherNodeType) {
+            if (st == frontend_err_t::Success     ) continue;
+            if (st == frontend_err_t::AlocationErr) return -1;    
         }
 
-        if ((st = GetVar (&parser_ctx)) != language_err_t::AnotherNodeType) {
-            if (st == language_err_t::Success     ) continue;
-            if (st == language_err_t::AlocationErr) return -1;    
+        if ((st = GetVar (&parser_ctx)) != frontend_err_t::AnotherNodeType) {
+            if (st == frontend_err_t::Success     ) continue;
+            if (st == frontend_err_t::AlocationErr) return -1;    
         }
     }
 
@@ -57,7 +57,7 @@ MakeNodeBuffer (const char* buffer, int size, token_t** tokens)
 
 //--------------------------------------------------------------------------------
 
-static language_err_t
+static frontend_err_t
 GetNum (parser_ctx_t* parser_ctx)
 {
     DEBUG_ASSERT (parser_ctx != nullptr);
@@ -77,7 +77,7 @@ GetNum (parser_ctx_t* parser_ctx)
     if (last_s < buffer + parser_ctx->size &&
        (isalpha (*last_s) || *last_s == '_')) {
 
-        return language_err_t::AnotherNodeType;
+        return frontend_err_t::AnotherNodeType;
     }
 
     parser_ctx->pos = last_s - buffer;
@@ -85,7 +85,7 @@ GetNum (parser_ctx_t* parser_ctx)
     node = NewNode (node_type_t::Constant, MakeDigitData (value), nullptr, nullptr);
     
     if (node == nullptr) {
-        return language_err_t::AlocationErr;
+        return frontend_err_t::AlocationErr;
     }
     
     tokens[node_num  ].line = cur_line;
@@ -99,12 +99,12 @@ GetNum (parser_ctx_t* parser_ctx)
     parser_ctx->cur_line = cur_line;
     parser_ctx->node_num = node_num;
 
-    return language_err_t::Success;
+    return frontend_err_t::Success;
 }
 
 //--------------------------------------------------------------------------------
 
-static language_err_t
+static frontend_err_t
 GetBasicWord (parser_ctx_t* parser_ctx)
 {
     DEBUG_ASSERT (parser_ctx != nullptr);
@@ -121,14 +121,14 @@ GetBasicWord (parser_ctx_t* parser_ctx)
     int word_num = GetBasicWordNum (parser_ctx, &type);
 
     if (word_num == -1) {
-        return language_err_t::AnotherNodeType;
+        return frontend_err_t::AnotherNodeType;
     }
 
     tree_node_t* node = NewNode (type   , MakeKeywordData ((keywords_t) word_num), 
                                  nullptr, nullptr);
 
     if (node == nullptr) {
-        return language_err_t::AlocationErr;
+        return frontend_err_t::AlocationErr;
     }
 
     tokens[node_num  ].node = node;
@@ -139,12 +139,12 @@ GetBasicWord (parser_ctx_t* parser_ctx)
     parser_ctx->cur_line = cur_line;
     parser_ctx->node_num = node_num;
 
-    return language_err_t::Success;
+    return frontend_err_t::Success;
 }
 
 //--------------------------------------------------------------------------------
 
-static language_err_t
+static frontend_err_t
 GetVar (parser_ctx_t* parser_ctx)
 {
     DEBUG_ASSERT (parser_ctx != nullptr);
@@ -167,7 +167,7 @@ GetVar (parser_ctx_t* parser_ctx)
     }
 
     if (i == 0) {
-        return language_err_t::SyntaxErr;
+        return frontend_err_t::SyntaxErr;
     }
 
     variable_t var = {};
@@ -182,7 +182,7 @@ GetVar (parser_ctx_t* parser_ctx)
     tree_node_t* node = NewNode (node_type_t::Variable, data, nullptr, nullptr);
 
     if (node == nullptr) {
-        return language_err_t::AlocationErr;
+        return frontend_err_t::AlocationErr;
     }
 
     tokens[node_num  ].node = node;
@@ -194,7 +194,7 @@ GetVar (parser_ctx_t* parser_ctx)
     parser_ctx->cur_line = cur_line;
     parser_ctx->node_num = node_num;
 
-    return language_err_t::Success;
+    return frontend_err_t::Success;
 }
 
 //--------------------------------------------------------------------------------
@@ -207,7 +207,7 @@ LexicalDump (token_t* tokens, int count)
     FILE* dump = fopen ("dump/lexical.txt", "w");
 
     if (dump == nullptr) {
-        PRINTERR (language_err_t::FopenErr);
+        PRINTERR (frontend_err_t::FopenErr);
         return ;
     }
 

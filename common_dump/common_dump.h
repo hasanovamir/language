@@ -20,4 +20,11 @@ tree_err_t  TreeEndFillHtml     (void);
 
 //————————————————————————————————————————————————————————————————————————————————
 
+#define SET_NODE_PARAMS                                                                                                      \
+fprintf (dot_file, " <ptr> ptr:%p | {<left_node> left_node=%p | <right_node> right_node=%p } }\", color=black, style=filled,", \
+        node, node->left_node, node->right_node);
+
+#define SET_NODE_COLOUR(colour) \
+fprintf (dot_file, " fillcolor=%s];\n", colour); 
+
 #endif //COMMON_DUMP

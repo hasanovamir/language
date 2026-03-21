@@ -1,4 +1,4 @@
-#include "lang.h"
+#include "frontend.h"
 
 //--------------------------------------------------------------------------------
 
@@ -9,7 +9,7 @@ static const token_t* tokens;
 
 //--------------------------------------------------------------------------------
 
-static language_err_t VarArrCtor  (variable_ctx** var_ctx);
+static frontend_err_t VarArrCtor  (variable_ctx** var_ctx);
 static void           VarArrDtor  (variable_ctx*  var_ctx);
 static bool           CheckForVar (variable_t var, variable_type_t type, int params_count);
 
@@ -548,7 +548,7 @@ GetFigBracket ()
 
         variable_ctx* v_ctx = nullptr;
 
-        if (VarArrCtor (&v_ctx) == language_err_t::AlocationErr) {
+        if (VarArrCtor (&v_ctx) == frontend_err_t::AlocationErr) {
             return nullptr;
         }
 
@@ -856,7 +856,7 @@ GetFunction ()
 
         variable_ctx* v_ctx = nullptr;
 
-        if (VarArrCtor (&v_ctx) == language_err_t::AlocationErr) { //array to foo params
+        if (VarArrCtor (&v_ctx) == frontend_err_t::AlocationErr) { //array to foo params
             return nullptr;
         }
 
@@ -948,28 +948,28 @@ CheckForVar (variable_t var, variable_type_t type, int params_count)
 
 //--------------------------------------------------------------------------------
 
-static language_err_t
+static frontend_err_t
 VarArrCtor (variable_ctx** var_ctx)
 {
     *var_ctx = (variable_ctx*) calloc (1, sizeof (variable_ctx));
 
     if (*var_ctx == nullptr) {
-        PRINTERR (language_err_t::AlocationErr);
-        return language_err_t::AlocationErr;
+        PRINTERR (frontend_err_t::AlocationErr);
+        return frontend_err_t::AlocationErr;
     }
 
     variable_t* var_arr = (variable_t*) calloc (CommonStackSize, sizeof (variable_t));
 
     if (var_arr == nullptr) {
-        PRINTERR (language_err_t::AlocationErr);
-        return language_err_t::AlocationErr;
+        PRINTERR (frontend_err_t::AlocationErr);
+        return frontend_err_t::AlocationErr;
     }
 
     (*var_ctx)->capacity = CommonStackSize;
 
     (*var_ctx)->variable_arr = var_arr;
 
-    return language_err_t::Success;
+    return frontend_err_t::Success;
 }
 
 //--------------------------------------------------------------------------------

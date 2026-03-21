@@ -30,7 +30,8 @@ MyAlloc ()
 
     while  (alloc_context->big_array[alloc_context->cur_array].list.free == 0)
     {
-        if (ChangeSrcArray ()!= tree_err_t::Success) {
+        if (ChangeSrcArray ()!= tree_err_t::Success)
+        {
             return NULL;
         }
     }

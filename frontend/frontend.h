@@ -3,7 +3,7 @@
 
 //————————————————————————————————————————————————————————————————————————————————
 
-#include "lang_types.h"
+#include "frontend_types.h"
 #include "common_dump.h"
 #include "stack.h"
 
@@ -36,11 +36,11 @@ tree_data_t  MakeMathOperData           (math_oper_t oper     );
 tree_err_t   LangInit                   (const char* file_name);
 tree_data_t  MakeMathFuncData           (math_func_t foo);
 tree_node_t* MakeTree                   (const token_t* tokens, int node_num);
-language_err_t
+frontend_err_t
 InitParserCtx (parser_ctx_t* parser, const char* buffer, int size);
-language_err_t
+frontend_err_t
 UpsizeTokenBuffer (parser_ctx_t* parser);
-language_err_t
+frontend_err_t
 SaveASTtoFile (const char* file_name, const tree_node_t* head);
 
 //————————————————————————————————————————————————————————————————————————————————
